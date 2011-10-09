@@ -1,7 +1,7 @@
 import cairo, math, sys
 
 import cairoplot
-from series import Series
+from cairoplot.series import Series
 
 # non-random data for needs of visual comparison of changes
 if '--non-random' in sys.argv:
