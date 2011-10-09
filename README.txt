@@ -1,6 +1,10 @@
 =============
-Cairoplot-bsm
+cairoplot-bsm
 =============
+
+A fork of cairoplot to add new functionality needed by various internal
+projects. 
+
 
 Towel Stuff provides such and such and so and so. You might find
 it most useful for tasks involving <x> and also <y>. Typical usage
