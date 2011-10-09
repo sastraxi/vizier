@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # CairoPlot.py
@@ -288,6 +288,8 @@ class ScatterPlot( Plot ):
                  series_legend = False,
                  x_labels = None,
                  y_labels = None,
+                 x_formatter = None,
+                 y_formatter = None,
                  x_bounds = None,
                  y_bounds = None,
                  z_bounds = None,
@@ -303,6 +305,9 @@ class ScatterPlot( Plot ):
         self.titles = {}
         self.titles[HORZ] = x_title
         self.titles[VERT] = y_title
+        self.label_formatters = {}
+        self.label_formatters[HORZ] = x_formatter
+        self.label_formatters[VERT] = y_formatter
         self.max_value = {}
         self.axis = axis
         self.discrete = discrete
@@ -396,19 +401,17 @@ class ScatterPlot( Plot ):
             self.errors[VERT] = [errory]
     
     def calc_labels(self):
-        if not self.labels[HORZ]:
-            amplitude = self.bounds[HORZ][1] - self.bounds[HORZ][0]
-            if amplitude % 10: #if horizontal labels need floating points
-                self.labels[HORZ] = ["%.2lf" % (float(self.bounds[HORZ][0] + (amplitude * i / 10.0))) for i in range(11) ]
-            else:
-                self.labels[HORZ] = ["%d" % (int(self.bounds[HORZ][0] + (amplitude * i / 10.0))) for i in range(11) ]
-        if not self.labels[VERT]:
-            amplitude = self.bounds[VERT][1] - self.bounds[VERT][0]
-            if amplitude % 10: #if vertical labels need floating points
-                self.labels[VERT] = ["%.2lf" % (float(self.bounds[VERT][0] + (amplitude * i / 10.0))) for i in range(11) ]
-            else:
-                self.labels[VERT] = ["%d" % (int(self.bounds[VERT][0] + (amplitude * i / 10.0))) for i in range(11) ]
-
+        for key in (HORZ, VERT):
+            if not self.labels[key]:
+                amplitude = self.bounds[key][1] - self.bounds[key][0]
+                labels = (self.bounds[key][0] + (amplitude * i / 10.0) for i in range(11))
+                if self.label_formatters[key]:
+                    self.labels[key] = [self.label_formatters[key](label) for label in labels]
+                elif amplitude % 10: #if horizontal labels need floating points
+                    self.labels[key] = ["%.2lf" % float(label) for label in labels]
+                else:
+                    self.labels[key] = ["%d" % int(label) for label in labels]
+        
     def calc_extents(self, direction):
         self.context.set_font_size(self.font_size * 0.8)
         self.max_value[direction] = max(self.context.text_extents(item)[2] for item in self.labels[direction])
@@ -1292,12 +1295,14 @@ class VerticalBarPlot(BarPlot):
                  y_labels = None,
                  x_bounds = None,
                  y_bounds = None,
-                 series_colors = None):
+                 series_colors = None,
+                 value_formatter = None):
 
         BarPlot.__init__(self, surface, data, width, height, background, border, 
                          display_values, grid, rounded_corners, stack, three_dimension,
                          x_labels, y_labels, x_bounds, y_bounds, series_colors, VERT)
         self.series_labels = series_labels
+        self.value_formatter = value_formatter or str
 
     def calc_vert_extents(self):
         self.calc_extents(VERT)
@@ -1395,19 +1400,21 @@ class VerticalBarPlot(BarPlot):
         if self.stack:
             for i,group in enumerate(self.series):
                 value = sum(group.to_list())
-                width = self.context.text_extents(str(value))[2]
+                strvalue = self.value_formatter(value)
+                width = self.context.text_extents(strvalue)[2]
                 x = self.borders[HORZ] + (i+0.5)*self.steps[HORZ] + (i+1)*self.space - width/2
                 y = value*self.steps[VERT] + 2
                 self.context.move_to(x, self.plot_top-y)
-                self.context.show_text(str(value))
+                self.context.show_text(strvalue)
         else:
             for i,group in enumerate(self.series):
                 inner_step = self.steps[HORZ]/len(group)
                 x0 = self.borders[HORZ] + i*self.steps[HORZ] + (i+1)*self.space
                 for number,data in enumerate(group):
-                    width = self.context.text_extents(str(data.content))[2]
+                    strvalue = self.value_formatter(data.content)
+                    width = self.context.text_extents(strvalue)[2]
                     self.context.move_to(x0 + 0.5*inner_step - width/2, self.plot_top - data.content*self.steps[VERT] - 2)
-                    self.context.show_text(str(data.content))
+                    self.context.show_text(strvalue)
                     x0 += inner_step
 
     def render_plot(self):
@@ -1983,6 +1990,8 @@ def scatter_plot(name,
                  series_legend = False,
                  x_labels = None,
                  y_labels = None,
+                 x_formatter = None,
+                 y_formatter = None,
                  x_bounds = None,
                  y_bounds = None,
                  z_bounds = None,
@@ -2008,6 +2017,7 @@ def scatter_plot(name,
     
     plot = ScatterPlot( name, data, errorx, errory, width, height, background, border,
                         axis, dash, discrete, dots, grid, series_legend, x_labels, y_labels,
+                        x_formatter, y_formatter,
                         x_bounds, y_bounds, z_bounds, x_title, y_title, series_colors, circle_colors )
     plot.render()
     plot.commit()
@@ -2224,7 +2234,8 @@ def vertical_bar_plot(name,
                       y_labels = None, 
                       x_bounds = None, 
                       y_bounds = None,
-                      colors = None):
+                      colors = None,
+                      value_formatter = None):
     #TODO: Fix docstring for vertical_bar_plot
     '''
         - Function to generate vertical Bar Plot Charts.
@@ -2246,6 +2257,7 @@ def vertical_bar_plot(name,
         x_labels, y_labels - lists of strings containing the horizontal and vertical labels for the axis;
         x_bounds, y_bounds - tuples containing the lower and upper value bounds for the data to be plotted;
         colors - List containing the colors expected for each of the bars.
+        value_formatter - if present, this function will be called with the value, and the string it returns will be used
 
         - Example of use
 
@@ -2255,7 +2267,7 @@ def vertical_bar_plot(name,
     
     plot = VerticalBarPlot(name, data, width, height, background, border, 
                            display_values, grid, rounded_corners, stack, three_dimension, 
-                           series_labels, x_labels, y_labels, x_bounds, y_bounds, colors)
+                           series_labels, x_labels, y_labels, x_bounds, y_bounds, colors, value_formatter)
     plot.render()
     plot.commit()
 
