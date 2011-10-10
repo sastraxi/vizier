@@ -7,5 +7,5 @@ setup(
     requires=['cairo',],
     license='GNU LGPL 2.1',
     url='https://github.com/sastraxi/cairoplot-bsm',
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
 )
