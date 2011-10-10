@@ -99,23 +99,19 @@ def other_direction(direction):
 
 #Class definition
 
-class Plot(object):
+class Plot(Drawable):
     def __init__(self,
-                 surface=None,
                  data=None,
-                 width=640,
-                 height=480,
                  background=None,
                  border = 0,
                  x_labels = None,
                  y_labels = None,
                  series_colors = None):
         random.seed(2)
-        self.create_surface(surface, width, height)
+        self.context = None
         self.dimensions = {}
         self.dimensions[HORZ] = width
         self.dimensions[VERT] = height
-        self.context = None
         self.labels={}
         self.labels[HORZ] = x_labels
         self.labels[VERT] = y_labels
@@ -128,38 +124,6 @@ class Plot(object):
         self.line_width = 0.5
         self.label_color = (0.0, 0.0, 0.0)
         self.grid_color = (0.8, 0.8, 0.8)
-
-    def create_surface(self, surface, width=None, height=None):
-        self.filename = None
-        if isinstance(surface, cairo.Surface):
-            self.handler = vizier.handlers.VectorHandler(surface, width,
-                    height)
-            return
-        if isinstance(surface, vizier.handlers.Handler):
-            self.handler = surface
-            return
-        if not type(surface) in (str, unicode):
-            raise TypeError("Surface should be either a Cairo surface or a filename, not %s" % surface)
-
-        # choose handler based on file extension (svg is default)
-        sufix = surface.rsplit(".")[-1].lower()
-        filename = surface
-        handlerclass = vizier.handlers.SVGHandler
-        if sufix == "png":
-            handlerclass = vizier.handlers.PNGHandler
-        elif sufix == "ps":
-            handlerclass = vizier.handlers.PSHandler
-        elif sufix == "pdf":
-            handlerclass = vizier.handlers.PDFHandler
-        elif sufix != "svg":
-            filename += ".svg"
-        self.handler = handlerclass(filename, width, height)
-
-    def commit(self):
-        try:
-            self.handler.commit(self)
-        except cairo.Error:
-            pass
 
     def load_series (self, data, x_labels=None, y_labels=None, series_colors=None):
         self.series_labels = []
@@ -265,10 +229,17 @@ class Plot(object):
                                self.dimensions[VERT] - 2 * self.border)
         self.context.stroke()
 
-    def render(self):
-        """All plots must prepare their context before rendering."""
-        self.handler.prepare(self)
+    def draw(self, ctx, width, height):
+        """ All plots must prepare their context before rendering. """
+        self.context = ctx
+        self.dimensions[vizier.HORZ] = width
+        self.dimensions[vizier.VERT] = height
+        self.render()
 
+    def render(self):
+        """ render() is called by draw(). Do not override draw, as you'd have to remember
+            to call the base class. Instead, put your drawing code in render(). """
+        raise NotImplementedError
 
 
 class ScatterPlot( Plot ):
@@ -477,8 +448,6 @@ class ScatterPlot( Plot ):
         return tuple( [self.circle_colors[0][i] + value*self.circle_color_step[i] for i in range(4)] )
 
     def render(self):
-        Plot.render(self)
-
         self.calc_all_extents()
         self.calc_steps()
         self.render_background()
@@ -1038,8 +1007,6 @@ class BarPlot(Plot):
         self.space = 0.1*self.steps[other_dir]
 
     def render(self):
-        Plot.render(self)
-
         self.calc_all_extents()
         self.calc_steps()
         self.render_background()
@@ -1731,8 +1698,6 @@ class PiePlot(Plot):
         self.context.close_path()
 
     def render(self):
-        Plot.render(self)
-
         self.render_background()
         self.render_bounding_box()
         if self.shadow:
@@ -1885,8 +1850,6 @@ class GanttChart (Plot) :
         self.vertical_step = self.borders[VERT]
 
     def render(self):
-        Plot.render(self)
-
         self.calc_horz_extents()
         self.calc_vert_extents()
         self.calc_steps()
