@@ -1,6 +1,6 @@
 
 import cairo
-import cairoplot
+import vizier
 from .handler import Handler as _Handler
 
 class FixedSizeHandler(_Handler):

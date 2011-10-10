@@ -24,7 +24,7 @@
 
 # Contributor: Rodrigo Moreiro Araujo <alf.rodrigo@gmail.com>
 
-#import cairoplot
+#import vizier
 import doctest
 
 NUMTYPES = (int, float, long)

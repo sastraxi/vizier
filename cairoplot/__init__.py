@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# CairoPlot.py
+# __init__.py
 #
 # Copyright (c) 2008 Rodrigo Moreira Araújo
 #
@@ -36,7 +36,7 @@ import math
 import random
 from series import Series, Group, Data
 
-import cairoplot.handlers
+import vizier.handlers
 
 HORZ = 0
 VERT = 1
@@ -132,10 +132,10 @@ class Plot(object):
     def create_surface(self, surface, width=None, height=None):
         self.filename = None
         if isinstance(surface, cairo.Surface):
-            self.handler = cairoplot.handlers.VectorHandler(surface, width,
+            self.handler = vizier.handlers.VectorHandler(surface, width,
                     height)
             return
-        if isinstance(surface, cairoplot.handlers.Handler):
+        if isinstance(surface, vizier.handlers.Handler):
             self.handler = surface
             return
         if not type(surface) in (str, unicode):
@@ -144,13 +144,13 @@ class Plot(object):
         # choose handler based on file extension (svg is default)
         sufix = surface.rsplit(".")[-1].lower()
         filename = surface
-        handlerclass = cairoplot.handlers.SVGHandler
+        handlerclass = vizier.handlers.SVGHandler
         if sufix == "png":
-            handlerclass = cairoplot.handlers.PNGHandler
+            handlerclass = vizier.handlers.PNGHandler
         elif sufix == "ps":
-            handlerclass = cairoplot.handlers.PSHandler
+            handlerclass = vizier.handlers.PSHandler
         elif sufix == "pdf":
-            handlerclass = cairoplot.handlers.PDFHandler
+            handlerclass = vizier.handlers.PDFHandler
         elif sufix != "svg":
             filename += ".svg"
         self.handler = handlerclass(filename, width, height)
@@ -341,7 +341,7 @@ class ScatterPlot( Plot ):
         return out_data
 
     def load_series(self, data, x_labels = None, y_labels = None, series_colors=None):
-        #TODO: In cairoplot 2.0 keep only the Series instances
+        #TODO: In vizier 2.0 keep only the Series instances
 
         # Convert Data and Group to Series
         if isinstance(data, Data) or isinstance(data, Group):
@@ -2117,11 +2117,11 @@ def dot_line_plot(name,
         - Examples of use
 
         data = [0, 1, 3, 8, 9, 0, 10, 10, 2, 1]
-        CairoPlot.dot_line_plot('teste', data, 400, 300)
+        vizier.dot_line_plot('teste', data, 400, 300)
 
         data = { "john" : [10, 10, 10, 10, 30], "mary" : [0, 0, 3, 5, 15], "philip" : [13, 32, 11, 25, 2] }
         x_labels = ["jan/2008", "feb/2008", "mar/2008", "apr/2008", "may/2008" ]
-        CairoPlot.dot_line_plot( 'test', data, 400, 300, axis = True, grid = True,
+        vizier.dot_line_plot( 'test', data, 400, 300, axis = True, grid = True,
                                   series_legend = True, x_labels = x_labels )
     """
     plot = DotLinePlot( name, data, width, height, background, border,
@@ -2174,7 +2174,7 @@ def function_plot(name,
         - Example of use
 
         data = lambda x : x**2
-        CairoPlot.function_plot('function4', data, 400, 300, grid = True, x_bounds=(-10,10), step = 0.1)
+        vizier.function_plot('function4', data, 400, 300, grid = True, x_bounds=(-10,10), step = 0.1)
     """
 
     plot = FunctionPlot( name, data, width, height, background, border,
@@ -2204,7 +2204,7 @@ def pie_plot( name, data, width, height, background = "white light_gray", gradie
         - Example of use
 
         teste_data = {"john" : 123, "mary" : 489, "philip" : 890 , "suzy" : 235}
-        CairoPlot.pie_plot("pie_teste", teste_data, 500, 500)
+        vizier.pie_plot("pie_teste", teste_data, 500, 500)
     """
 
     plot = PiePlot( name, data, width, height, background, gradient, shadow, colors )
@@ -2233,7 +2233,7 @@ def donut_plot(name, data, width, height, background = "white light_gray", gradi
         - Example of use
 
         teste_data = {"john" : 123, "mary" : 489, "philip" : 890 , "suzy" : 235}
-        CairoPlot.donut_plot("donut_teste", teste_data, 500, 500)
+        vizier.donut_plot("donut_teste", teste_data, 500, 500)
     """
 
     plot = DonutPlot(name, data, width, height, background, gradient, shadow, colors, inner_radius)
@@ -2262,7 +2262,7 @@ def gantt_chart(name, pieces, width, height, x_labels, y_labels, colors):
         x_labels = [ 'teste01', 'teste02', 'teste03', 'teste04']
         y_labels = [ '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0010' ]
         colors = [ (1.0, 0.0, 0.0), (1.0, 0.7, 0.0), (1.0, 1.0, 0.0), (0.0, 1.0, 0.0) ]
-        CairoPlot.gantt_chart('gantt_teste', pieces, 600, 300, x_labels, y_labels, colors)
+        vizier.gantt_chart('gantt_teste', pieces, 600, 300, x_labels, y_labels, colors)
     """
 
     plot = GanttChart(name, pieces, width, height, x_labels, y_labels, colors)
@@ -2313,7 +2313,7 @@ def vertical_bar_plot(name,
         - Example of use
 
         data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        CairoPlot.vertical_bar_plot ('bar2', data, 400, 300, border = 20, grid = True, rounded_corners = False)
+        vizier.vertical_bar_plot ('bar2', data, 400, 300, border = 20, grid = True, rounded_corners = False)
     '''
     
     plot = VerticalBarPlot(name, data, width, height, background, border, 
@@ -2365,7 +2365,7 @@ def horizontal_bar_plot(name,
         - Example of use
 
         data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        CairoPlot.bar_plot ('bar2', data, 400, 300, border = 20, grid = True, rounded_corners = False)
+        vizier.bar_plot ('bar2', data, 400, 300, border = 20, grid = True, rounded_corners = False)
     """
 
     plot = HorizontalBarPlot(name, data, width, height, background, border,
