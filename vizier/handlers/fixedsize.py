@@ -9,8 +9,8 @@ class FixedSizeHandler(_Handler):
     def __init__(self, width, height):
         """Create with fixed width and height."""
         self.dimensions = {}
-        self.dimensions[cairoplot.HORZ] = width
-        self.dimensions[cairoplot.VERT] = height
+        self.dimensions[vizier.HORZ] = width
+        self.dimensions[vizier.VERT] = height
 
         # sub-classes must create a surface
         self.surface = None
