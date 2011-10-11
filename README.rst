@@ -13,6 +13,9 @@ that project, who sadly have not had time to continue their work. See the
 original CairoPlot on `Launchpad <https://launchpad.net/cairoplot>`_ for
 more information about that project.
 
+Note: requires libcairo >= 1.10.1, to fix a bug with multi-page PDF clipping.
+https://bugs.freedesktop.org/show_bug.cgi?id=24691
+
 Quick Example
 =============
 
@@ -51,6 +54,3 @@ follows::
     book.compile(fp)    
     fp.close()        
 
-
-Urls are http://like.this and links can be
-written .
