@@ -1,22 +1,47 @@
 #!/usr/bin/env python
 
 from vizier.book import PDFBook, SimplePage, GridPage, Inch, LEFT, BOTTOM#, TextSpace
-from vizier.plot import VerticalBarPlot, ScatterPlot
+from vizier.plot import ContinuousPlot, X
+from vizier.series import LineSeries, AreaSeries, Threshold
 #from vizier.plot.series import SmoothedLineSeries, BarSeries
 #from vizier.plot.axis import DateAxis, NumberAxis
 #from vizier.themes import CrispTheme
 book = PDFBook()
 
-bar_graph = VerticalBarPlot([1, 2, 3, 4, 5, 6, 7])
-page = SimplePage(width=11*Inch, height=8.5*Inch, margin=0.5*Inch)
-page[0] = bar_graph
-book.append(page)
+import datetime
+import random
 
-page = GridPage(width=8.5*Inch, height=11*Inch, rows=2, columns=2, margin=0.5*Inch, spacing=0.5*Inch)
-page[0, 0] = ScatterPlot([(0, 0), (0.1, 0.3), (1, 0.1), (2, 2.3), (3, 3)])
+ranges = []
+midpoints = []
+data = []
+errors = []
+for x in range(24):
+    ranges.append((x, x+1))
+    midpoints.append(x + 0.5)
+    #ranges.append((datetime.datetime(2011, 10, 9, x, 0, 0), datetime.datetime(2011, 10, 9, x+1, 0, 0)))
+    #midpoints.append(ranges[-1][0] + datetime.timedelta(minutes=30))
+    data.append(data[-1] + 110 + random.random() * 40 if x != 0 else 0)
+    errors.append(random.random() * 400)
+
+complex_graph = ContinuousPlot(title="Continuous Effluent Flow", subtitle="These words sound scientific", legend=True, y_grid=(0, 1500))
+complex_graph.grid[X] = (0, 3) #times[0][0], datetime.timedelta(hours=3))
+complex_graph.add(
+
+    # each tuple in the data is (x, y, y-error)
+    LineSeries("+500", zip(midpoints, [d + 400 + random.random() * 1800 for d in data]), curviness=1),
+
+    # each tuple in the data is (x[start, end], y, y-error)
+    AreaSeries("Raw", zip(ranges, data, errors)),
+    
+    # show a threshold at y=4.25
+    Threshold("Warning", "High Water Usage (Design) [5]", 4678),
+    Threshold("Warning", "High Water Usage (MOE) [6]", 7500)
+
+)
+
+page = GridPage(width=8.5*Inch, height=11*Inch, rows=2, columns=1, margin=0.5*Inch, spacing=0.5*Inch)
+page[0, 0] = complex_graph
 page[0, 1] = page[0, 0]
-page[1, 0] = page[0, 0]
-page[1, 1] = page[0, 0]
 book.append(page)
 
 '''

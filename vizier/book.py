@@ -1,7 +1,7 @@
 from __future__ import with_statement
-import contextlib
 
 import cairo
+from cairohelpers import *
 from .plot import Drawable
 
 LEFT = -1
@@ -12,16 +12,6 @@ TOP = -1
 BOTTOM = 1
 
 Inch = 72.0 # points/inch
-
-@contextlib.contextmanager
-def subcontext(ctx, x, y, width, height):
-    ctx.save()
-    ctx.new_path()
-    ctx.rectangle(x, y, width, height)
-    ctx.clip()
-    ctx.translate(x, y)
-    yield
-    ctx.restore()
 
 class Book(list):
 

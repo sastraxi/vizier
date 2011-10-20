@@ -1,26 +1,27 @@
-=========================================
-Vizier: a fork of Cairoplot for reporting
-=========================================
+==================================
+Vizier: a python reporting library
+==================================
 
-A fork of cairoplot to add new reporting functionality, including but not
-limited to
+Originally intended to be a fork of cairoplot to add new reporting functionality,
+vizier has been completely re-written and re-imagined to provide a dead-easy
+reporting and graphing alternative for python using cairo.
+
+Notable features include::
 
 * the creation and management of multi-page documents ("books"); and
 * different types of plots (e.g. bar, line, scatter) on one graph
 
-Vizier is dedicated to the fine work of the contributors and maintainers of
-that project, who sadly have not had time to continue their work. See the
-original CairoPlot on `Launchpad <https://launchpad.net/cairoplot>`_ for
-more information about that project.
+Vizier was inspired by the fine work of the contributors and maintainers of
+the CairoPlot project, who sadly have not had time to continue their work. See
+`CairoPlot's project page on Launchpad <https://launchpad.net/cairoplot>`_.
 
-Note: requires libcairo >= 1.10.1, to fix a bug with multi-page PDF clipping.
+Note: libcairo >= 1.10.1 recommended, to fix a bug with multi-page PDF clipping.
 https://bugs.freedesktop.org/show_bug.cgi?id=24691
 
 Quick Example
 =============
 
-Vizier is used much like cairoplot; a multi-page PDF could be created as
-follows::
+A multi-page PDF could be created as follows::
 
     #!/usr/bin/env python
 
@@ -33,10 +34,18 @@ follows::
     page[0] = bar_graph
     book.append(page)
     
-    complex_graph = Graph()
-    complex_graph.add_plot(LinePlot([10, 9, 10, 9, 8, 10, 7, 6]))
-    complex_graph.add_plot(BarPlot([7, 6, 5, 4, 3, 2, 1, 0]))
-    complex_graph.add_y_threshold(9.5, "Above here is trouble")
+    complex_graph = ContinuousPlot(legend=True, x_grid=(0, 0.2), y_grid=(0, 0.5))
+    complex_graph.add_series(
+
+        # each tuple in the data is (x, y, y-error)
+        LineSeries("Raw Observations", [(0, 0.03, 0.016), (1, 0.18, 0.034), (2, 0.176, 0.016)]),
+
+        # each tuple in the data is (x[start, end], y, y-error)
+        AreaSeries("Other Things", [((-0.5, 0.5), 1.03, 0.016), ((0.5, 1.5), 1.21, 0.034), ((1.5, 2.5), 1.386, 0.034)]),
+        
+        # show a threshold at y=4.25
+        Threshold("Warning", "Imminent Catastrophic Destruction", 4.25)
+    )
     
     vlayout = VerticalLayout(0.1, 0.6) # splits a space vertically into 3.
     vlayout[0] = TextSpace("This layout", halign=LEFT)
