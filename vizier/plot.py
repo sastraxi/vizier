@@ -44,14 +44,17 @@ class ContinuousPlot(Plot):
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
     def __init__(self, title=None, subtitle=None, legend=False, x_grid=False, y_grid=False,
-                                                                x_labels=True, y_labels=True,
+                                                                x_labels=False, y_labels=True,
                                                                 x_title=None, y_title=None,
+                                                                x_formatter=None, y_formatter=None,
                                                                 bounds=None):
         Plot.__init__(self, title, subtitle)
         self.legend = legend
         self.grid = [x_grid, y_grid] # N.B. each arg is a 2-tuple (start, positive_step)
         self.labels = [x_labels, y_labels]
         self.axis_titles = [x_title, y_title]
+        self.formatters = [x_formatter or (lambda v: str(v)),
+                           y_formatter or (lambda v: str(v))]
         self.bounds = bounds
         self._autobounds = bounds is None
         self._series = []
@@ -128,7 +131,7 @@ class ContinuousPlot(Plot):
 
         self.context.restore()
 
-    def generate_x_labels(self, width):
+    def generate_x_stops(self, width):
 
         # if we have any area series:
         # take the most-frequent one that won't crowd the x axis and display labels at the midpoints.
@@ -145,7 +148,7 @@ class ContinuousPlot(Plot):
             stops.append(x)        
         return stops
 
-    def generate_y_labels(self, height):
+    def generate_y_stops(self, height):
 
         if self.grid[Y]:
             start, step = self.grid[Y]
@@ -154,9 +157,10 @@ class ContinuousPlot(Plot):
             return [], 0
 
         stops = []
-        for y in frange(start, self.bounds[Y2], step):
+        for y in frange(start + step, self.bounds[Y2], step): # start + step because we don't want a grid line or label for the bottom of the graph
             stops.append(y)
         
+        # TODO send out the largest y-label size (use the formatter)
         return stops, 0
 
     def render(self):
@@ -192,7 +196,7 @@ class ContinuousPlot(Plot):
         # draw the series legend.
         if self.legend:
             for i, series in enumerate(self._series):
-                with subcontext(ctx, end[X] - 80, start[Y] + i * 20 + 2, 12, 12):
+                with subcontext(ctx, end[X] - 80, start[Y] + i * 20 + 3, 11, 11):
                     self.theme.prepare_series(i, series)
                     series.draw_legend_icon(ctx)
                 ctx.move_to(end[X] - 64, start[Y] + i * 20 + 12)
@@ -204,7 +208,7 @@ class ContinuousPlot(Plot):
             with subcontext(ctx, start[X], end[Y] - 14, 12, 12):
                 self.theme.prepare_threshold(i, threshold)
                 threshold.draw_legend_icon(ctx)
-            ctx.move_to(start[X] + 16, end[Y] - 4)
+            ctx.move_to(start[X] + 16, end[Y] - 5)
             threshold.draw_legend_label(ctx)
             end[Y] -= 16
         if self._thresholds: end[Y] -= 4
@@ -212,18 +216,31 @@ class ContinuousPlot(Plot):
         # prepare our grids and labels.
         x_stops, y_stops = [], []
 
-        if self.axis_titles[X]: end[Y] -= 16
+        if self.axis_titles[X]: end[Y] -= 20
         if self.labels[X]: end[Y] -= 10
-
+        
         if self.axis_titles[Y]: start[X] += 16
         if self.labels[Y] or self.grid[Y]:
-            y_stops, width = self.generate_y_labels(end[Y] - start[Y])
+            y_stops, width = self.generate_y_stops(end[Y] - start[Y])
             start[X] += width + 4
 
         if self.labels[X]:
-            x_stops = self.generate_x_labels(end[X] - start[X])            
-            # TODO in the future, we'll add a rotated x-axis label scheme which would influence end[Y]
+            x_stops = self.generate_x_stops(end[X] - start[X])            
+            # TODO in the future, we'll add a rotated x-axis label scheme which would influence end[Y]            
         
+        # draw labels.
+        if self.axis_titles[X]:
+            self.theme.prepare_subtitle()
+            ctx.move_to(0.5 * (start[X] + end[X]), end[Y] + 12.0)
+            drawtext(ctx, self.axis_titles[X], CENTER, TOP)
+
+        if self.axis_titles[Y]:
+            # FIXME: this has something you don't... a GREAT BIG BUSHY HACK
+            with unclipped(ctx):
+                self.theme.prepare_subtitle()
+                ctx.move_to(start[X] - 20.0, 0.5 * (start[Y] + end[Y]))
+                drawtext(ctx, self.axis_titles[Y], RIGHT, MIDDLE, rotation=-0.5 * math.pi, hadjust=28, vadjust=-14)
+
         # draw graph elements.
         with self.dataspace(start, end):
             
@@ -232,18 +249,16 @@ class ContinuousPlot(Plot):
                 # draw grid line.
                 self.theme.prepare_grid()                
                 if self.grid[Y]:
-                    # don't draw the bottom grid line for the Y axis
-                    if (y - EPSILON) > self.bounds[Y1]:
-                        ctx.move_to(self.bounds[X1], y)
-                        ctx.line_to(self.bounds[X2], y)
-                        stroke(ctx, 0.5)
+                    ctx.move_to(self.bounds[X1], y)
+                    ctx.line_to(self.bounds[X2], y)
+                    stroke(ctx, 0.5)
                     
                 # draw the label.
                 self.theme.prepare_label()
                 if self.labels[Y]:
                     ctx.move_to(self.bounds[X1], y)
                     with unclipped(ctx):
-                        drawtext(ctx, str(y) + "  ", RIGHT, MIDDLE)
+                        drawtext(ctx, self.formatters[Y](y), RIGHT, MIDDLE, hadjust=-4.0)
                         
             for x in x_stops:
             
@@ -256,13 +271,12 @@ class ContinuousPlot(Plot):
                         ctx.line_to(x, self.bounds[Y2])
                         stroke(ctx, 0.5)
                     
-                    
                 # draw the label.
                 self.theme.prepare_label()
                 if self.labels[X]:
                     ctx.move_to(x, self.bounds[Y1])
                     with unclipped(ctx):
-                        drawtext(ctx, str(x), CENTER, TOP, vadjust=4.0)
+                        drawtext(ctx, self.formatters[X](x), CENTER, TOP, vadjust=4.0)
             
 
             for i, threshold in enumerate(self._thresholds):

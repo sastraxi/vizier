@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from vizier.book import PDFBook, SimplePage, GridPage, Inch, LEFT, BOTTOM#, TextSpace
+from vizier.book import PDFBook, SimplePage, GridPage, Inch, LEFT, BOTTOM
 from vizier.plot import ContinuousPlot, X, Y
 from vizier.series import LineSeries, AreaSeries, Threshold
 book = PDFBook()
@@ -24,7 +24,8 @@ complex_graph = ContinuousPlot(title="Continuous Effluent Flow",
                                subtitle="These words sound scientific",
                                legend=True,
                                x_grid=(0, 3), x_labels=True, x_title="Hour of Day",
-                               y_grid=(0, 1500), y_labels=True, y_title="Rate (L/min)")
+                               y_grid=(0, 1500), y_labels=True, y_title="Rate (L/min)",
+                               x_formatter=lambda h: "%d:00" % (h%24,))
 complex_graph.add(
 
     # each tuple in the data is (x, y, y-error)
