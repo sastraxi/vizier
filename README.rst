@@ -18,6 +18,22 @@ the CairoPlot project, who sadly have not had time to continue their work. See
 Note: libcairo >= 1.10.1 recommended, to fix a bug with multi-page PDF clipping.
 https://bugs.freedesktop.org/show_bug.cgi?id=24691
 
+Installing on Windows
+=====================
+
+Grab a recent version of GTK+, which includes Cairo. You can download an installer here:
+http://sourceforge.net/projects/gtk-win/files/GTK%2B%20Runtime%20Environment/GTK%2B%202.22/
+
+Now, get vizier. In the root vizier directory, run::
+
+    python setup.py install
+
+You should now be able to run one of the examples. Try::
+
+    python examples/test1.py
+
+If abc.pdf is created and looks relatively sane, you're ready to go.
+
 Quick Example
 =============
 
