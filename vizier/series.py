@@ -147,13 +147,23 @@ class LineSeries(Series):
         position = [(t[X], t[Y]) for t in self.data]
         def velocity(i):
             if i == 0 or i == len(position) - 1: return (0, 0)
+            if math.isnan(position[i+1][Y]) or math.isnan(position[i-1][Y]): return (0, 0)
             x, y = (position[i+1][0] - position[i-1][0], position[i+1][1] - position[i-1][1])
             x, y = 0.5 * x, 0.5 * y
             return (x, y)
 
-        ctx.move_to(*position[0])
+        needpt = True
+        for i in range(0, len(position)):
+            if math.isnan(position[i][Y]):
+                stroke(ctx, 2.0)
+                needpt = True
+                continue
+            
+            if needpt:
+                ctx.move_to(*position[i])
+                needpt = False
+                continue
 
-        for i in range(1, len(position)):
             px0, py0 = position[i-1]
             px1, py1 = position[i]
             vx0, vy0 = velocity(i-1)                        
@@ -167,12 +177,13 @@ class LineSeries(Series):
             x2, y2 = (px1 - 0.5 * self.curviness * vx1, py1 - 0.5 * self.curviness * vy1)
             x3, y3 = (px1, py1)
             ctx.curve_to(x1, y1, x2, y2, x3, y3)
-        
+
         stroke(ctx, 2.0)
 
         if self.dots:
             for p in position:
-                dot(ctx, p[X], p[Y], dot_radius)
+                if not math.isnan(p[Y]):
+                    dot(ctx, p[X], p[Y], dot_radius)
         
     def draw_errors(self, ctx, transform):
         for x, y, y_error in self.data:
