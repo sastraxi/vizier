@@ -49,7 +49,7 @@ class ContinuousPlot(Plot):
                                                                 bounds=None):
         Plot.__init__(self, title, subtitle)
         self.legend = legend
-        self.grid = [x_grid, y_grid]
+        self.grid = [x_grid, y_grid] # N.B. each arg is a 2-tuple (start, positive_step)
         self.labels = [x_labels, y_labels]
         self.axis_titles = [x_title, y_title]
         self.bounds = bounds
@@ -68,6 +68,7 @@ class ContinuousPlot(Plot):
     def _calculate_bounds(self):
         self.minimum_point = None
         self.maximum_point = None
+        
         for el in self._series + self._thresholds:           
             minpt, maxpt = el.get_minimum_point(), el.get_maximum_point()
             
@@ -86,8 +87,23 @@ class ContinuousPlot(Plot):
                 if maxpt[Y] is not None: self.maximum_point = (self.maximum_point[X], max(self.maximum_point[Y], maxpt[Y]))
 
         if self._autobounds:
-            self.bounds = (self.minimum_point[X], self.minimum_point[Y],
-                           self.maximum_point[X], self.maximum_point[Y])
+            self.bounds = [self.minimum_point[X], self.minimum_point[Y],
+                           self.maximum_point[X], self.maximum_point[Y]]
+            
+            # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
+            if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
+                self.bounds[Y1] = 0
+
+            # XXX here be stupid, hacky dragons.
+            # sane margins, github issue #3
+            self.bounds[Y2] *= 1.07                 
+
+            # give extra X padding to line-only graphs, github issue #3
+            all_lines = all(isinstance(s, LineSeries) for s in self._series)
+            if all_lines:
+                avg_spacing = sum(s.average_x_frequency() for s in self._series) / float(len(self._series))
+                self.bounds[X1] -= 0.5 * avg_spacing 
+                self.bounds[X2] += 0.5 * avg_spacing
     
     @contextlib.contextmanager
     def dataspace(self, start, end):
@@ -108,13 +124,40 @@ class ContinuousPlot(Plot):
                            (end[Y] - start[Y]) / height)
         self.context.translate(-self.bounds[X1], -self.bounds[Y1])
 
-        #self.context.move_to(self.bounds[X1], self.bounds[Y1])
-        #self.context.line_to(self.bounds[X1] + width, self.bounds[Y1] + height)
-        #stroke(self.context, 2)
-
         yield 
 
         self.context.restore()
+
+    def generate_x_labels(self, width):
+
+        # if we have any area series:
+        # take the most-frequent one that won't crowd the x axis and display labels at the midpoints.
+        # if we don't, take 
+
+        if self.grid[X]:
+            start, step = self.grid[X]
+        else:
+            # TODO figure out how much space we have, etc. etc.
+            return []
+
+        stops = []
+        for x in frange(start, self.bounds[X2] + EPSILON, step):
+            stops.append(x)        
+        return stops
+
+    def generate_y_labels(self, height):
+
+        if self.grid[Y]:
+            start, step = self.grid[Y]
+        else:
+            # TODO figure out how much space we have, etc. etc.
+            return [], 0
+
+        stops = []
+        for y in frange(start, self.bounds[Y2], step):
+            stops.append(y)
+        
+        return stops, 0
 
     def render(self):
         self.theme.context = self.context
@@ -123,27 +166,28 @@ class ContinuousPlot(Plot):
         # TODO push measuring responsibilities over to Theme
         # TODO text lists (e.g. legend, labels) need to be able to calculate their extents
         # TODO investigate whether we could use Spaces as a layout mechanism here.
+        # TODO messy magic numbers all about.
 
         # bounding box of the graph.
         # this will get modified as we go through the function.
-        PADDING = 10.0
+        PADDING = 0.0
         start = [PADDING, PADDING]
         end = [self.width - PADDING, self.height - PADDING]
 
         # draw the title and subtitle.
-        if self.title or self.subtitle: start[Y] += 4
-        
         if self.title:
-            ctx.move_to(start[X], start[Y])
+            ctx.move_to(start[X], start[Y] + 12)
             self.theme.prepare_title()
             ctx.show_text(self.title)
             start[Y] += 12
 
         if self.subtitle:
-            ctx.move_to(start[X], start[Y])
+            ctx.move_to(start[X], start[Y] + 12)
             self.theme.prepare_subtitle()
             ctx.show_text(self.subtitle)
-            start[Y] += 12            
+            start[Y] += 12
+
+        if self.title or self.subtitle: start[Y] += 10
 
         # draw the series legend.
         if self.legend:
@@ -151,41 +195,75 @@ class ContinuousPlot(Plot):
                 with subcontext(ctx, end[X] - 80, start[Y] + i * 20 + 2, 12, 12):
                     self.theme.prepare_series(i, series)
                     series.draw_legend_icon(ctx)
-                with subcontext(ctx, end[X] - 80, start[Y] + i * 20, end[X], 16):
-                    series.draw_legend_label(ctx)
-            end[X] -= 80
+                ctx.move_to(end[X] - 64, start[Y] + i * 20 + 12)
+                series.draw_legend_label(ctx)
+            end[X] -= 90
 
         # draw the threshold legend.
-        for threshold in self._thresholds:
+        for i, threshold in enumerate(self._thresholds):
             with subcontext(ctx, start[X], end[Y] - 14, 12, 12):
                 self.theme.prepare_threshold(i, threshold)
                 threshold.draw_legend_icon(ctx)
             ctx.move_to(start[X] + 16, end[Y] - 4)
             threshold.draw_legend_label(ctx)
-            end[Y] -= 20
+            end[Y] -= 16
+        if self._thresholds: end[Y] -= 4
 
-        # draw the Y axis title and labels.
-        # TODO`
+        # prepare our grids and labels.
+        x_stops, y_stops = [], []
 
-        # draw the X axis title and labels.
-        # TODO
+        if self.axis_titles[X]: end[Y] -= 16
+        if self.labels[X]: end[Y] -= 10
 
+        if self.axis_titles[Y]: start[X] += 16
+        if self.labels[Y] or self.grid[Y]:
+            y_stops, width = self.generate_y_labels(end[Y] - start[Y])
+            start[X] += width + 4
+
+        if self.labels[X]:
+            x_stops = self.generate_x_labels(end[X] - start[X])            
+            # TODO in the future, we'll add a rotated x-axis label scheme which would influence end[Y]
+        
         # draw graph elements.
         with self.dataspace(start, end):
             
-            self.theme.prepare_grid()
-            if self.grid[Y]:
-                y_start, y_step = self.grid[Y]
-                assert(y_step > 0)
-                for y in frange(y_start, self.bounds[Y2], y_step):
-                    # don't draw right on/below the axis.
-                    if (y + EPSILON) > self.bounds[Y1]:
+            for y in y_stops:
+                
+                # draw grid line.
+                self.theme.prepare_grid()                
+                if self.grid[Y]:
+                    # don't draw the bottom grid line for the Y axis
+                    if (y - EPSILON) > self.bounds[Y1]:
                         ctx.move_to(self.bounds[X1], y)
                         ctx.line_to(self.bounds[X2], y)
                         stroke(ctx, 0.5)
-                        # TODO also draw label
+                    
+                # draw the label.
+                self.theme.prepare_label()
+                if self.labels[Y]:
+                    ctx.move_to(self.bounds[X1], y)
+                    with unclipped(ctx):
+                        drawtext(ctx, str(y) + "  ", RIGHT, MIDDLE)
                         
-            # TODO X grid
+            for x in x_stops:
+            
+                # draw grid line.
+                self.theme.prepare_grid()     
+                if self.grid[X]:
+                    # don't draw edge grid lines for the X axis
+                    if (x - EPSILON) > self.bounds[X1] and (x + EPSILON) < self.bounds[X2]:
+                        ctx.move_to(x, self.bounds[Y1])
+                        ctx.line_to(x, self.bounds[Y2])
+                        stroke(ctx, 0.5)
+                    
+                    
+                # draw the label.
+                self.theme.prepare_label()
+                if self.labels[X]:
+                    ctx.move_to(x, self.bounds[Y1])
+                    with unclipped(ctx):
+                        drawtext(ctx, str(x), CENTER, TOP, vadjust=4.0)
+            
 
             for i, threshold in enumerate(self._thresholds):
                 self.theme.prepare_threshold(i, threshold)
@@ -202,3 +280,21 @@ class ContinuousPlot(Plot):
         ctx.move_to(start[X], end[Y])
         ctx.line_to(end[X], end[Y])
         ctx.stroke()
+
+        # draw a QR code.
+        '''
+        import datetime
+        import urllib, urllib2        
+        text = "goo.gl/tw1d90y"
+        url = "http://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=" + urllib.quote(text) + "&chld=H|0"
+        fobj = urllib2.urlopen(url)
+        surface = cairo.ImageSurface.create_from_png(fobj)        
+        dest_x = self.width - 25
+        dest_y = 0
+        ctx.rectangle(dest_x, dest_y, 25, 25)
+        ctx.save()
+        ctx.scale(25 / 300.0, 25 / 300.0)
+        ctx.set_source_surface(surface, dest_x * (300 / 25.0), dest_y * (300 / 25.0))
+        ctx.fill()
+        ctx.restore()            
+        '''

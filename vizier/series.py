@@ -29,6 +29,9 @@ class Series(object):
     def __init__(self, name):
         self.name = name
 
+    def average_x_frequency(self):
+        pass
+
     def get_minimum_point(self):
         pass
 
@@ -47,7 +50,7 @@ class Series(object):
 class AreaSeries(Series):
     """ Data given in the form of ((x1, x2), y, y-error) """
 
-    HALF_SPACING = 0.5
+    HALF_SPACING = 1.0
 
     def __init__(self, name, data):
         Series.__init__(self, name)
@@ -59,6 +62,15 @@ class AreaSeries(Series):
                 xs, y = d
                 yerr = None
             self.data.append((xs, y, yerr))
+
+    def average_x_frequency(self):
+        spacings = 0
+        nspacings = len(self.data) - 1
+        for i in range(nspacings):
+            m1 = 0.5 * (self.data[i][X][0] + self.data[i][X][1])
+            m2 = 0.5 * (self.data[i+1][X][0] + self.data[i+1][X][1])
+            spacings += (m2 - m1)
+        return float(spacings) / nspacings
 
     def get_minimum_point(self):
         if not self.data: return None
@@ -73,12 +85,17 @@ class AreaSeries(Series):
         return (x, y)
 
     def draw_data(self, ctx, bounds):
-        for xs, y2, y_error in self.data:
+        half_spacing, _zero = scaledsize(ctx, self.HALF_SPACING, 0)
+
+        # XXX total hack.
+        r, g, b, a = ctx.get_source().get_rgba()
+
+        for i, d in enumerate(self.data):
+            xs, y2, y_error = d
             x1, x2 = xs
             y1 = 0
 
-            half_spacing, _zero = scaledsize(ctx, self.HALF_SPACING, 0)
-
+            ctx.set_source_rgba(r, g, b, a * (1.0 if i % 2 else 0.9))
             ctx.rectangle(x1 + half_spacing, y1, x2 - x1 - 2*half_spacing, y2)
             ctx.fill()
 
@@ -104,6 +121,13 @@ class LineSeries(Series):
         self.curviness = curviness
         self.dots = dots
 
+    def average_x_frequency(self):
+        spacings = 0
+        nspacings = len(self.data) - 1
+        for i in range(nspacings):
+            spacings += (self.data[i+1][X] - self.data[i][X])
+        return float(spacings) / nspacings
+
     def get_minimum_point(self):
         if not self.data: return None
         x = min(t[X] for t in self.data)
@@ -121,31 +145,10 @@ class LineSeries(Series):
         # TODO use bounds to clip out data
 
         position = [(t[X], t[Y]) for t in self.data]
-        '''
-        min_pt = (min(p[X] for p in position), min(p[Y] for p in position))
-        max_pt = (max(p[X] for p in position), max(p[Y] for p in position))
-        clamp = lambda a, low, high: low if a < low else (high if a > high else a)                    
-        constrain = lambda x, y: (clamp(x, min_pt[0], max_pt[0]), clamp(y, min_pt[1], max_pt[1]))
-        '''
         def velocity(i):
             if i == 0 or i == len(position) - 1: return (0, 0)
             x, y = (position[i+1][0] - position[i-1][0], position[i+1][1] - position[i-1][1])
             x, y = 0.5 * x, 0.5 * y
-            '''
-            if x == 0 and y == 0: return (x, y)
-            
-            # constrain in both directions
-            def line_hit_ratio(dir):
-                dx, dy = dir * x, dir * y
-                cx, cy = position[i][0] + dx, position[i][1] + dy
-                ccx, ccy = constrain(cx, cy)
-                rx, ry = 1.0 - ((ccx - cx) / x), 1.0 - ((ccy - cy) / y) # negatives will cancel out here, dx,dy will be positive
-                return min(rx, ry)
-
-            ratios = [line_hit_ratio(1), line_hit_ratio(-1)]
-            r = min(ratios) ** 0.3 # XXX mixing factor is really silly, but hey, the graphs look good niow!
-            x, y = x * r, y * r
-            '''
             return (x, y)
 
         ctx.move_to(*position[0])
@@ -180,7 +183,7 @@ class LineSeries(Series):
 class Threshold(Series):
 
     def __init__(self, type, name, value):
-        Series.__init__(self, type + ":" + name)
+        Series.__init__(self, str(value) + " - " + type + ": " + name)
         self.type = type
         self.value = value
     

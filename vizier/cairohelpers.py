@@ -3,6 +3,14 @@ import contextlib
 import cairo
 import math
 
+TOP = 1.0
+MIDDLE = 0.5
+BOTTOM = 0.0
+
+LEFT = 0.0
+CENTER = -0.5
+RIGHT = -1.0
+
 @contextlib.contextmanager
 def subcontext(ctx, x, y, width, height):
     ctx.save()
@@ -17,6 +25,13 @@ def subcontext(ctx, x, y, width, height):
 def unscaled(ctx):
     ctx.save()
     ctx.identity_matrix()   
+    yield
+    ctx.restore()
+
+@contextlib.contextmanager
+def unclipped(ctx):
+    ctx.save()
+    ctx.reset_clip()
     yield
     ctx.restore()
 
@@ -55,3 +70,14 @@ def roundedrect(ctx, x, y, width, height, radius):
     ctx.arc(x + width - radius, y + height - radius, radius, 0, 0.5 * math.pi)
     ctx.arc(x + radius, y + height - radius, radius, 0.5 * math.pi, 1.0 * math.pi)
     ctx.arc(x + radius, y + radius, radius, 1.0 * math.pi, 1.5 * math.pi)
+
+def drawtext(ctx, text, halign=LEFT, valign=TOP, hadjust=0.0, vadjust=0.0, size=None):
+    with unscaled(ctx):
+        sx, sy = ctx.get_current_point()
+        if size: ctx.set_font_size(size)
+        x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)
+        
+        ctx.rel_move_to(halign * x_advance + hadjust, valign * height + vadjust)
+
+        ctx.show_text(text)
+        #ctx.move_to(sx, sy)
