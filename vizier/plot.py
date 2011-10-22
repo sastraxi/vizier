@@ -145,7 +145,8 @@ class ContinuousPlot(Plot):
 
         stops = []
         for x in frange(start, self.bounds[X2] + EPSILON, step):
-            stops.append(x)        
+            if x >= self.bounds[X1]:
+                stops.append(x)        
         return stops
 
     def generate_y_stops(self, height):
@@ -158,7 +159,8 @@ class ContinuousPlot(Plot):
 
         stops = []
         for y in frange(start + step, self.bounds[Y2], step): # start + step because we don't want a grid line or label for the bottom of the graph
-            stops.append(y)
+            if y >= self.bounds[Y1]:
+                stops.append(y)
         
         # TODO send out the largest y-label size (use the formatter)
         return stops, 0
