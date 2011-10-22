@@ -2,6 +2,8 @@ from distutils.core import setup
 import vizier
 
 setup(
+    author='Cameron Gorrie',
+    author_email='sastraxi@gmail.com',
     name='vizier',
     version=vizier.__version__,
     packages=['vizier'],

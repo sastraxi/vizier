@@ -25,6 +25,7 @@ def subcontext(ctx, x, y, width, height):
 
 @contextlib.contextmanager
 def unscaled(ctx):
+    # TODO truly only unscale (keep rotation, etc.)
     ctx.save()
     ctx.identity_matrix()   
     yield
@@ -80,6 +81,19 @@ def drawtext(ctx, text, halign=LEFT, valign=TOP, hadjust=0.0, vadjust=0.0, size=
         if size: ctx.set_font_size(size)
 
         ctx.rotate(rotation)        
+
+        x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)
+        ctx.rel_move_to(halign * x_advance + hadjust, valign * height + vadjust)            
+
+        ctx.show_text(text)
+        #ctx.move_to(sx, sy)
+
+def rotatedtext(ctx, text, halign=LEFT, valign=TOP, hadjust=0.0, vadjust=0.0, size=None, rotation=0):
+    with unscaled(ctx):
+        sx, sy = ctx.get_current_point()
+        if size: ctx.set_font_size(size)
+
+        ctx.rotate(rotation)
 
         x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)
         ctx.rel_move_to(halign * x_advance + hadjust, valign * height + vadjust)            

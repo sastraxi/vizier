@@ -224,7 +224,7 @@ class ContinuousPlot(Plot):
             y_stops, width = self.generate_y_stops(end[Y] - start[Y])
             start[X] += width + 4
 
-        if self.labels[X]:
+        if self.labels[X] or self.grid[X]:
             x_stops = self.generate_x_stops(end[X] - start[X])            
             # TODO in the future, we'll add a rotated x-axis label scheme which would influence end[Y]            
         

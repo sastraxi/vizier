@@ -107,7 +107,7 @@ class AreaSeries(Series):
 
 class LineSeries(Series):
 
-    def __init__(self, name, data, dots=True, curviness=1.0):
+    def __init__(self, name, data, dots=True, curviness=0.0, nan_holes=True):
         Series.__init__(self, name)
         self.data = []
         for d in data:
@@ -116,7 +116,11 @@ class LineSeries(Series):
             except ValueError: # need more than 2 values to unpack
                 x, y = d
                 yerr = None
-            self.data.append((x, y, yerr))
+
+            # adding NaN values to self.data will create holes, so only add
+            # them if that's what we went.
+            if nan_holes or not math.isnan(y):
+                self.data.append((x, y, yerr))
 
         self.curviness = curviness
         self.dots = dots
@@ -131,7 +135,7 @@ class LineSeries(Series):
     def get_minimum_point(self):
         if not self.data: return None
         x = min(t[X] for t in self.data)
-        y = min(t[Y] for t in self.data) # XXX if we take into account error here we'll go below 0 for graphs that probably should't
+        y = min(t[Y] for t in self.data) # XXX if we take into account error here we'll go below 0 for graphs that probably shouldn't
         return (x, y)            
 
     def get_maximum_point(self):

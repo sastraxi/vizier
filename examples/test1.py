@@ -45,7 +45,7 @@ complex_graph2.grid[Y] = (0, 10)
 complex_graph2.add(
 
     LineSeries("Random(5, 55)", [(0.5 + (x / 2.0), 5 + 50 * random.random()) for x in range(20)], curviness=0),
-    LineSeries("Random(20, 40)", [(0.5 + (x / 3.0), (20 + 20 * random.random()) if random.random() < 0.8 else float('nan'), random.random() * 2) for x in range(30)])
+    LineSeries("Random(20, 40)", [(0.5 + (x / 3.0), (20 + 20 * random.random()) if random.random() < 0.8 else float('nan'), random.random() * 2) for x in range(30)], curviness=1, nan_holes=True)
 
 )
 
