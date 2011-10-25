@@ -54,9 +54,9 @@ def scaledsize(ctx, x, y):
     ctx.append_path(saved_path)
     return x2 - x1, y2 - y1
 
-def stroke(ctx, width):
+def stroke(ctx, width=None):
     with unscaled(ctx):
-        ctx.set_line_width(width)
+        if width: ctx.set_line_width(width)
         ctx.stroke()
 
 def dot(ctx, x, y, radius):

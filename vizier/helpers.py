@@ -33,3 +33,7 @@ def frange(*args):
             raise StopIteration
         yield v
         v += step
+
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)

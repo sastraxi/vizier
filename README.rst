@@ -2,25 +2,28 @@
 Vizier: a python reporting library
 ==================================
 
-Originally intended to be a fork of cairoplot to add new reporting functionality,
-vizier has been completely re-written and re-imagined to provide a dead-easy
-reporting and graphing alternative for python using cairo.
+Vizier started as a fork of cairoplot adding multi-page PDF support.
 
-Notable features include::
+Since then, the project has been written from the ground-up and re-imagined
+to provide a dead-easy reporting and graphing solution for python using cairo.
+Notable features include
 
-    - bezier line interpolation,
+  * bezier line interpolation,
 
-    - handling NaN values,
+  * handling NaN values,
 
-    - threshold indicators,
+  * threshold indicators,
 
-    - the creation and management of multi-page documents ("books"), and
+  * the creation and management of multi-page documents ("books"), and
 
-    - different types of plots (e.g. rectangle, line, scatter) on one graph
+  * different types of plots (e.g. rectangle, line, scatter) on one graph
 
-Vizier was inspired by the fine work of the contributors and maintainers of
+I'd like to point you to the fine work of the contributors and maintainers of
 the CairoPlot project, who sadly have not had time to continue their work. See
 `CairoPlot's project page on Launchpad <https://launchpad.net/cairoplot>`_.
+Vizier does not yet provide a comparable level of functionality to cairoplot,
+whose sources are available here (in a modified form) by checking out the tag
+cairoplot-merged.
 
 Note: libcairo >= 1.10.1 recommended, to fix a bug with multi-page PDF clipping.
 https://bugs.freedesktop.org/show_bug.cgi?id=24691

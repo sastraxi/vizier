@@ -3,6 +3,8 @@
 from vizier.book import PDFBook, SimplePage, GridPage, Inch, LEFT, BOTTOM
 from vizier.plot import ContinuousPlot, X, Y
 from vizier.series import LineSeries, AreaSeries, Threshold
+from vizier.themes import SlickTheme, MarkerType
+from vizier.axes import *
 book = PDFBook()
 
 import datetime
@@ -23,9 +25,10 @@ for x in range(24):
 complex_graph = ContinuousPlot(title="Continuous Effluent Flow",
                                subtitle="These words sound scientific",
                                legend=True,
-                               x_grid=(0, 3), x_labels=True, x_title="Hour of Day",
-                               y_grid=(0, 1500), y_labels=True, y_title="Rate (L/min)",
-                               x_formatter=lambda h: "%d:00" % (h%24,))
+                               #x_axis=DatetimeAxis("Hour of Day", major=datetime.timedelta(minutes=180), minor=datetime.timedelta(minutes=60)),
+                               x_axis=NumberAxis("Hour of Day", major=3.0, minor=1.0),
+                               y_axis=NumberAxis("Rate (L/min)", major=1500, minor=250),
+                               theme=SlickTheme())
 complex_graph.add(
 
     # each tuple in the data is (x, y, y-error)
@@ -40,8 +43,13 @@ complex_graph.add(
 
 )
 
-complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", legend=False)
-complex_graph2.grid[Y] = (0, 10)
+complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", legend=False, theme=SlickTheme())
+complex_graph2.axis[X] = NumberAxis(None, major=3.0)
+complex_graph2.axis[Y] = NumberAxis(None, major=10, minor=2.5)
+complex_graph2.theme.minor_axis_labels[Y] = True
+complex_graph2.theme.minor_axis_labels[X] = True
+complex_graph2.theme.minor_axis_style[Y] = MarkerType.INNER_TICKS
+complex_graph2.theme.minor_axis_style[X] = MarkerType.LINES
 complex_graph2.add(
 
     LineSeries("Random(5, 55)", [(0.5 + (x / 2.0), 5 + 50 * random.random()) for x in range(20)], curviness=0),
