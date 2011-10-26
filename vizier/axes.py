@@ -5,9 +5,24 @@ import datetime
 
 STANDARD_EPOCH = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
+DT_INTERVALS = [(datetime.timedelta(days=365), '%d %b %Y'),
+                (datetime.timedelta(days=28), '%d %b %Y'),  # XXX: add true month support
+                (datetime.timedelta(days=7), '%d %b'),
+                (datetime.timedelta(days=1), '%d %b'),
+                (datetime.timedelta(hours=6), '%H:%M'),
+                (datetime.timedelta(hours=1), '%H:%M'),
+                (datetime.timedelta(minutes=10), '%H:%M'),
+                (datetime.timedelta(minutes=1), '%M:%S'),
+                (datetime.timedelta(seconds=10), '%M:%S'),
+                (datetime.timedelta(seconds=1), '%M:%S')]
+
 def labelstr(x):
     s = str(x)
     return s[:-2] if s.endswith('.0') else s
+
+def dtstr(x, fmt, epoch=STANDARD_EPOCH):
+    dt = epoch + datetime.timedelta(seconds=x)
+    return dt.strftime(fmt)
 
 class Always(object):
     def __init__(self, n):
@@ -103,25 +118,51 @@ class DatetimeAxis(Axis):
         if isinstance(minor, PerMajor):
             raise ValueError("Exact number of minor markers does not make sense for a DatetimeAxis")
         
+        self.epoch = epoch
         Axis.__init__(self, title, major, minor)
     
     def as_number(self, val):
-        return (val - DateTimeAxis.EPOCH).total_seconds()
-
-    def markers(self, lower, upper):
-
-        for (interval, MarkerType) in self._marker_intervals:
-            start = math.floor(lower / interval) * interval
+        return (val - self.epoch).total_seconds()
+    
+    #def markers(self, lower, upper):
+        
+        #for (interval, MarkerType) in self._marker_intervals:
+            #start = math.floor(lower / interval) * interval
             #for n in frange(start, upper + EPSILON, interval):
+    
 
-
-class AutoDatetimeAxis(Axis):
+class AutoDatetimeAxis(DatetimeAxis):
 
     def __init__(self, title, epoch=STANDARD_EPOCH):
-        Axis.__init__(self, title)
+        DatetimeAxis.__init__(self, title)
 
-    def as_number(self, val):
-        return (val - DateTimeAxis.EPOCH).total_seconds()
+    def find_intervals(self, size):
+        for i, interval in enumerate(DT_INTERVALS):  # go through acceptable intervals from largest to smallest
+            if size // interval[0].total_seconds() >= 2:  # once we find one that fits in the data range at least twice
+                return DT_INTERVALS[i], DT_INTERVALS[i+1]  # we take that one as the major interval, and the next smallest as the minor
 
-    
+    def markers(self, lower, upper):
+        
+        size = upper - lower
+        
+        if self.major is None:
+            major = self.find_intervals(size)[0][0].total_seconds()
+            x_fmt = self.find_intervals(size)[0][1]
+        else:
+            major = self.major
+            
+        if self.minor is None:
+            minor = self.find_intervals(size)[1][0].total_seconds()
+        else:
+            minor = self.minor
+        
+        marker_intervals = []
+        if major: marker_intervals.append([major, MajorMarker])
+        if minor: marker_intervals.append([minor, MinorMarker])
+
+        for (interval, MarkerType) in marker_intervals:
+            start = math.floor(lower / interval) * interval
+            for n in frange(start, upper + EPSILON, interval):
+                if n >= lower:
+                    yield MarkerType(n, dtstr(n, x_fmt))    
     

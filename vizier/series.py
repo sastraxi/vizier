@@ -81,28 +81,38 @@ class AreaSeries(Series):
     def get_maximum_point(self):
         if not self.data: return None
         x = max(t[X][1] for t in self.data)
+        # XXX y_error only makes sense if plot.axis[Y] is a NumberAxis
         y = max(t[Y] + (t[YERR] or 0) for t in self.data)
         return (x, y)
 
-    def draw_data(self, ctx, bounds):
+    def transformed_data(self, plot):
+        for xs, y, y_error in self.data:
+            x1, x2 = xs
+            # XXX y_error only makes sense if plot.axis[Y] is a NumberAxis
+            yield plot.axis[X].as_number(x1), \
+                  plot.axis[X].as_number(x2), \
+                  plot.axis[Y].as_number(y), \
+                  y_error
+    
+    def draw_data(self, plot):
+        ctx = plot.context
         half_spacing, _zero = scaledsize(ctx, self.HALF_SPACING, 0)
 
         # XXX total hack.
         r, g, b, a = ctx.get_source().get_rgba()
 
-        for i, d in enumerate(self.data):
-            xs, y2, y_error = d
-            x1, x2 = xs
-            y1 = 0
+        for i, d in enumerate(self.transformed_data(plot)):
+            x1, x2, y2, y_error = d
+            y1 = plot.bounds[Y1]
 
             ctx.set_source_rgba(r, g, b, a * (1.0 if i % 2 else 0.9))
             ctx.rectangle(x1 + half_spacing, y1, x2 - x1 - 2*half_spacing, y2)
             ctx.fill()
 
-    def draw_errors(self, ctx, bounds):
-        for xs, y, y_error in self.data:
+    def draw_errors(self, plot):
+        for x1, x2, y, y_error in self.transformed_data(plot):
             if y_error:
-                draw_error_bar(ctx, 0.5 * (xs[0] + xs[1]), y, y_error)
+                draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error)
 
 
 class LineSeries(Series):
@@ -125,11 +135,13 @@ class LineSeries(Series):
         self.curviness = curviness
         self.dots = dots
 
-    def average_x_frequency(self):
+    # XXX kinda hacky
+    def average_x_frequency(self, plot):
         spacings = 0
         nspacings = len(self.data) - 1
         for i in range(nspacings):
-            spacings += (self.data[i+1][X] - self.data[i][X])
+            spacings += (plot.axis[X].as_number(self.data[i+1][X]) \
+                         - plot.axis[X].as_number(self.data[i][X]))
         return float(spacings) / nspacings
 
     def get_minimum_point(self):
@@ -144,11 +156,17 @@ class LineSeries(Series):
         y = max(t[Y] + (t[YERR] or 0) for t in self.data)
         return (x, y)
 
-    def draw_data(self, ctx, bounds):
+    def transformed_data(self, plot):
+        for x, y, y_error in self.data:
+            # XXX y_error only makes sense if plot.axis[Y] is a NumberAxis
+            yield plot.axis[X].as_number(x), plot.axis[Y].as_number(y), y_error
+    
+    def draw_data(self, plot):
+        ctx = plot.context
         dot_radius = 3 #theme.get_dot_size(self) # TODO fix this
         # TODO use bounds to clip out data
 
-        position = [(t[X], t[Y]) for t in self.data]
+        position = [(t[X], t[Y]) for t in self.transformed_data(plot)]
         def velocity(i):
             if i == 0 or i == len(position) - 1: return (0, 0)
             if math.isnan(position[i+1][Y]) or math.isnan(position[i-1][Y]): return (0, 0)
@@ -189,10 +207,10 @@ class LineSeries(Series):
                 if not math.isnan(p[Y]):
                     dot(ctx, p[X], p[Y], dot_radius)
         
-    def draw_errors(self, ctx, transform):
-        for x, y, y_error in self.data:
+    def draw_errors(self, plot):
+        for x, y, y_error in self.transformed_data(plot):
             if y_error:
-                draw_error_bar(ctx, x, y, y_error)
+                draw_error_bar(plot.context, x, y, y_error)
 
 
 class Threshold(Series):
@@ -208,16 +226,18 @@ class Threshold(Series):
     def get_maximum_point(self):
         return (None, self.value)
 
-    def draw(self, ctx, bounds):
+    def draw(self, plot):
+        ctx = plot.context
         ctx.new_path()
-        ctx.move_to(bounds[X1], self.value)
-        ctx.line_to(bounds[X2], self.value)
-        stroke(ctx, 1.0)
+        y = plot.axis[Y].as_number(self.value)
+        ctx.move_to(plot.bounds[X1], y)
+        ctx.line_to(plot.bounds[X2], y)
+        stroke(ctx)
 
     def draw_legend_icon(self, ctx):
         x1, y1, x2, y2 = ctx.clip_extents()
         roundedrect(ctx, x1 + 1, y1 + 1, x2 - x1 - 2, y2 - y1 - 2, (x2 - x1) * 0.3)
-        stroke(ctx, 1.0)
+        stroke(ctx)
 
     def draw_legend_label(self, ctx):
         Series.draw_legend_label(self, ctx)

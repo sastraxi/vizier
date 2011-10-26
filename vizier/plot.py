@@ -84,8 +84,10 @@ class ContinuousPlot(Plot):
                 if maxpt[Y] is not None: self.maximum_point = (self.maximum_point[X], max(self.maximum_point[Y], maxpt[Y]))
 
         if self._autobounds:
-            self.bounds = [self.minimum_point[X], self.minimum_point[Y],
-                           self.maximum_point[X], self.maximum_point[Y]]
+            self.bounds = [self.axis[X].as_number(self.minimum_point[X]),
+                           self.axis[Y].as_number(self.minimum_point[Y]),
+                           self.axis[X].as_number(self.maximum_point[X]),
+                           self.axis[Y].as_number(self.maximum_point[Y])]
             
             # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
             if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
@@ -98,7 +100,7 @@ class ContinuousPlot(Plot):
             # give extra X padding to line-only graphs, github issue #3
             all_lines = all(isinstance(s, LineSeries) for s in self._series)
             if all_lines:
-                avg_spacing = sum(s.average_x_frequency() for s in self._series) / float(len(self._series))
+                avg_spacing = sum(s.average_x_frequency(self) for s in self._series) / float(len(self._series))
                 self.bounds[X1] -= 0.5 * avg_spacing 
                 self.bounds[X2] += 0.5 * avg_spacing
     
@@ -246,13 +248,13 @@ class ContinuousPlot(Plot):
             
             for i, threshold in enumerate(self._thresholds):
                 self.theme.prepare_threshold(i, threshold)
-                threshold.draw(ctx, self.bounds)
+                threshold.draw(self)
 
             for i, series in enumerate(self._series):
                 self.theme.prepare_series(i, series)
-                series.draw_data(ctx, self.bounds)
+                series.draw_data(self)
                 self.theme.prepare_error(i, series)
-                series.draw_errors(ctx, self.bounds)
+                series.draw_errors(self)
             
         # draw the X axis line.
         self.theme.prepare_axis_line()
