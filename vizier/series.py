@@ -106,7 +106,7 @@ class AreaSeries(Series):
             y1 = plot.bounds[Y1]
 
             ctx.set_source_rgba(r, g, b, a * (1.0 if i % 2 else 0.9))
-            ctx.rectangle(x1 + half_spacing, y1, x2 - x1 - 2*half_spacing, y2)
+            ctx.rectangle(x1 + half_spacing, y1, x2 - x1 - 2*half_spacing, y2-y1)
             ctx.fill()
 
     def draw_errors(self, plot):

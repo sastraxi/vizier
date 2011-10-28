@@ -45,11 +45,12 @@ class ContinuousPlot(Plot):
     """ Plots for which the X/Y axes form a continuous plane.
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
-    def __init__(self, title=None, subtitle=None, legend=False, x_axis=None, y_axis=None, bounds=None, theme=SlickTheme()):
+    def __init__(self, title=None, subtitle=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
         Plot.__init__(self, title, subtitle, theme)
         self.legend = legend
         self.axis = [x_axis, y_axis]
         self.bounds = bounds
+        self.y_min = y_min
         self._autobounds = bounds is None
         self._series = []
         self._thresholds = []
@@ -89,13 +90,27 @@ class ContinuousPlot(Plot):
                            self.axis[X].as_number(self.maximum_point[X]),
                            self.axis[Y].as_number(self.maximum_point[Y])]
             
+            # if there is no spread on the Y-axis, put the points in the middle of the graph.
+            # also captures the case where there are no points at all.
+            if abs(self.bounds[Y2] - self.bounds[Y1]) < EPSILON:
+                self.bounds[Y1] = self.bounds[Y1] - 0.5
+                self.bounds[Y2] = self.bounds[Y2] + 0.5
+            
             # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
             if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
                 self.bounds[Y1] = 0
+                
+            # allow manual override of Y1:
+            if self.y_min is not None:
+                self.bounds[Y1] = self.y_min
 
             # XXX here be stupid, hacky dragons.
             # sane margins, github issue #3
-            self.bounds[Y2] *= 1.07                 
+            y_padding = (self.bounds[Y2] - self.bounds[Y1]) * 0.07
+            self.bounds[Y2] += y_padding
+            if abs(self.bounds[Y1]) >= EPSILON:
+                self.bounds[Y1] -= y_padding
+            # XXX why is zero special?
 
             # give extra X padding to line-only graphs, github issue #3
             all_lines = all(isinstance(s, LineSeries) for s in self._series)
