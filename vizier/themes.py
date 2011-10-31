@@ -190,7 +190,7 @@ class WardTheme(SlickTheme):
         colour = self.THRESHOLD_COLOURS[index % len(self.THRESHOLD_COLOURS)]
         self.context.set_source_rgba(*colour)
         self.context.set_line_cap(cairo.LINE_CAP_ROUND)
-        self.context.set_dash([2.0, 4.0])
+        self.context.set_dash([5.0, 2.0])
         self.context.set_line_width(1.6)
         # TODO dash stuff here             
         
