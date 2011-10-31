@@ -10,7 +10,7 @@ DT_INTERVALS = [(datetime.timedelta(days=365), '%d %b %Y'),
                 (datetime.timedelta(days=28), '%d %b %Y'),  # XXX: add true month support
                 (datetime.timedelta(days=7), '%d %b'),
                 (datetime.timedelta(days=1), '%d %b'),
-                (datetime.timedelta(hours=6), '%H:%M'),
+                (datetime.timedelta(hours=3), '%H:%M'),
                 (datetime.timedelta(hours=1), '%H:%M'),
                 (datetime.timedelta(minutes=10), '%H:%M'),
                 (datetime.timedelta(minutes=1), '%M:%S'),
@@ -22,8 +22,8 @@ def n_intervals():
     n = 9
     while True:
         yield 10 ** n
+        yield 0.5 * (10 ** n)
         n -= 1
-
 
 def labelstr(x):
     s = str(x)
@@ -129,7 +129,7 @@ class AutoNumberAxis(NumberAxis):
     
     def find_intervals(self, size):
         for interval in n_intervals():  # go through acceptable intervals from largest to smallest
-            if size // interval >= 2:  # once we find one that fits in the data range at least twice
+            if size // interval >= 4:  # once we find one that fits in the data range at least twice
                 return interval, (interval / 5.0)  # we take that one as the major interval, and divide by 5 to get the minor                   
 
     def markers(self, lower, upper):
