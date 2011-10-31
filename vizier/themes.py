@@ -102,8 +102,8 @@ class SlickTheme(Theme):
             if axis == X:
                 line(x1, y1, x2, y1 - yt)
             else:
-                line(x1, y1, x1 - xt, y2)
-
+                line(x1, y1, x1 - xt, y2)               
+        
     def draw_marker_label(self, axis, marker, x, y):
         if not self.context: raise Exception("No context attached")
         self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
@@ -127,3 +127,70 @@ class SlickTheme(Theme):
         self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         self.context.set_source_rgba(0, 0, 0, 0.5)
         self.context.set_font_size(8.0)
+
+class WardTheme(SlickTheme):
+    def __init__(self):
+        SlickTheme.__init__(self)
+
+    def draw_marker_line(self, axis, marker, x1, y1, x2, y2):
+        if not self.context: raise Exception("No context attached")
+        self.context.set_line_width(0.4)
+        if isinstance(marker, MajorMarker):
+            self.context.set_source_rgba(0.0, 0.0, 0.0, 0.4)
+            style = self.major_axis_style[axis]
+        else:
+            self.context.set_source_rgba(0.0, 0.0, 0.0, 0.2)
+            style = self.minor_axis_style[axis]
+
+        def line(x1, y1, x2, y2):
+            self.context.move_to(x1, y1)
+            self.context.line_to(x2, y2)
+            stroke(self.context)
+
+        xt, yt = scaledsize(self.context, self.TICK_SIZE, self.TICK_SIZE)
+
+        if style == MarkerType.LINES:
+            line(x1, y1, x2, y2)
+        elif style == MarkerType.INNER_TICKS:
+            self.context.set_source_rgba(0.0, 0.0, 0.0, 0.5)
+            if axis == X:
+                line(x1, y1, x2, y1 + yt)
+            else:
+                line(x1, y1, x1 + xt, y2)
+
+        elif style == MarkerType.OUTER_TICKS:
+            self.context.set_source_rgba(0.0, 0.0, 0.0, 0.7)
+            if axis == X:
+                line(x1, y1, x2, y1 - yt)
+            else:
+                line(x1, y1, x1 - xt, y2) 
+                
+                
+    def draw_marker_label(self, axis, marker, x, y):
+        if not self.context: raise Exception("No context attached")
+        self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        self.context.set_source_rgba(0, 0, 0, 0.7)
+
+        if isinstance(marker, MajorMarker):
+            self.context.set_font_size(8.0)
+            if not self.major_axis_labels[axis]: return
+        else:
+            self.context.set_font_size(6.0)
+            if not self.minor_axis_labels[axis]: return
+
+        self.context.move_to(x, y)
+        if axis == X:
+            drawtext(self.context, marker.label, CENTER, TOP, vadjust=4.0)     
+        else:
+            drawtext(self.context, marker.label, RIGHT, MIDDLE, hadjust=-4.0)              
+                
+            
+    def prepare_threshold(self, index, threshold):
+        if not self.context: raise Exception("No context attached")
+        colour = self.THRESHOLD_COLOURS[index % len(self.THRESHOLD_COLOURS)]
+        self.context.set_source_rgba(*colour)
+        self.context.set_line_cap(cairo.LINE_CAP_ROUND)
+        self.context.set_dash([2.0, 4.0])
+        self.context.set_line_width(1.6)
+        # TODO dash stuff here             
+        
