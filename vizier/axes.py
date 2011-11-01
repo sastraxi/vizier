@@ -9,7 +9,7 @@ STANDARD_EPOCH = datetime.datetime(1970, 1, 1, 0, 0, 0)
 DT_INTERVALS = [(datetime.timedelta(days=365), '%d %b %Y'),
                 (datetime.timedelta(days=28), '%d %b %Y'),  # XXX: add true month support
                 (datetime.timedelta(days=7), '%d %b'),
-                (datetime.timedelta(days=1), '%d %b'),
+                (datetime.timedelta(days=1), '%d %b %H:%M'),
                 (datetime.timedelta(hours=3), '%H:%M'),
                 (datetime.timedelta(hours=1), '%H:%M'),
                 (datetime.timedelta(minutes=10), '%H:%M'),
