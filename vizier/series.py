@@ -6,8 +6,8 @@ import math
 HALF_ERROR_BAR_WIDTH = 3.0
 
 def draw_error_bar(ctx, x, y, error):
-    error_top = y + 0.5*error
-    error_bottom = y - 0.5*error
+    error_top = y + error
+    error_bottom = y - error
 
     half_width, _zero = scaledsize(ctx, HALF_ERROR_BAR_WIDTH, 0)
 
