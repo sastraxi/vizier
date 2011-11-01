@@ -22,10 +22,11 @@ class Drawable(object):
 
 class Plot(Drawable):
 
-    def __init__(self, title, subtitle, theme):
+    def __init__(self, title, subtitle, date, theme):
         self.theme = theme
         self.title = title
         self.subtitle = subtitle
+        self.date = date
         self.context = None
 
     def draw(self, context, width, height):
@@ -45,8 +46,8 @@ class ContinuousPlot(Plot):
     """ Plots for which the X/Y axes form a continuous plane.
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
-    def __init__(self, title=None, subtitle=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
-        Plot.__init__(self, title, subtitle, theme)
+    def __init__(self, title=None, subtitle=None, date=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
+        Plot.__init__(self, title, subtitle, date, theme)
         self.legend = legend
         self.axis = [x_axis, y_axis]
         self.bounds = bounds
@@ -168,9 +169,16 @@ class ContinuousPlot(Plot):
             ctx.move_to(start[X], start[Y] + 12)
             self.theme.prepare_subtitle()
             ctx.show_text(self.subtitle)
+        
+        if self.date:
+            ctx.move_to(end[X], start[Y] + 12)
+            self.theme.prepare_subtitle()
+            drawtext(ctx, self.date, halign=RIGHT, valign=BOTTOM)
+
+        if self.date or self.subtitle:
             start[Y] += 12
 
-        if self.title or self.subtitle: start[Y] += 10
+        if self.title or self.subtitle or self.date: start[Y] += 10
 
         # draw the series legend.
         if self.legend:

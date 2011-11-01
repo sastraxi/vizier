@@ -38,12 +38,12 @@ complex_graph.add(
     AreaSeries("Raw", zip(ranges, data, errors)),
     
     # show a threshold at y=4.25
-    Threshold("Warning", "High Water Usage (Design) [5]", 4678),
-    Threshold("Warning", "High Water Usage (MOE) [6]", 7500)
+    Threshold(5, "Warning", "High Water Usage (Design)", 4678),
+    Threshold(6, "Warning", "High Water Usage (MOE)", 7500)
 
 )
 
-complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", legend=False, theme=SlickTheme())
+complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", date="July 1, 2009", legend=False, theme=SlickTheme())
 complex_graph2.axis[X] = NumberAxis(None, major=3.0)
 complex_graph2.axis[Y] = NumberAxis(None, major=10, minor=2.5)
 complex_graph2.theme.minor_axis_labels[Y] = True
