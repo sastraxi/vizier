@@ -66,25 +66,24 @@ class ContinuousPlot(Plot):
         self._calculate_bounds()
 
     def _calculate_bounds(self):
-        self.minimum_point = None
-        self.maximum_point = None
+        minx, miny, maxx, maxy = None, None, None, None
         
         for el in self._series + self._thresholds:           
             minpt, maxpt = el.get_minimum_point(), el.get_maximum_point()
             
-            if not self.minimum_point:
-                self.minimum_point = minpt
-            else:
-                # allow minpt[X/Y] to be None: allows infinite lines in series (e.g. Thresholds)
-                if minpt[X] is not None: self.minimum_point = (min(self.minimum_point[X], minpt[X]), self.minimum_point[Y])
-                if minpt[Y] is not None: self.minimum_point = (self.minimum_point[X], min(self.minimum_point[Y], minpt[Y]))
+            if minpt[X] is not None: minx = minpt[X] if minx is None else min(minx, minpt[X])
+            if minpt[Y] is not None: miny = minpt[Y] if miny is None else min(miny, minpt[Y])
+            if maxpt[X] is not None: maxx = maxpt[X] if maxx is None else max(maxx, maxpt[X])
+            if maxpt[Y] is not None: maxy = maxpt[Y] if maxy is None else max(maxy, maxpt[Y])                                    
 
-            if not self.maximum_point:
-                self.maximum_point = maxpt
-            else:
-                # allow maxpt[X/Y] to be None: allows infinite lines in series (e.g. Thresholds)
-                if maxpt[X] is not None: self.maximum_point = (max(self.maximum_point[X], maxpt[X]), self.maximum_point[Y])
-                if maxpt[Y] is not None: self.maximum_point = (self.maximum_point[X], max(self.maximum_point[Y], maxpt[Y]))
+        # XXX is this the right way to do this? FIXME HACK TODO ETC.
+        if minx is None: minx = 0 if maxx is None else maxx
+        if miny is None: miny = 0 if maxy is None else maxy
+        if maxx is None: maxx = minx
+        if maxy is None: maxy = miny
+
+        self.minimum_point = (minx, miny)
+        self.maximum_point = (maxx, maxy)
 
         if self._autobounds:
             self.bounds = [self.axis[X].as_number(self.minimum_point[X]),

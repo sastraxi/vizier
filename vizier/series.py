@@ -148,13 +148,13 @@ class LineSeries(Series):
     def get_minimum_point(self):
         if not self.data: return None
         x = min(t[X] for t in self.data)
-        y = min(t[Y] for t in self.data) # XXX if we take into account error here we'll go below 0 for graphs that probably shouldn't
+        y = minimum((t[Y] for t in self.data if not math.isnan(t[Y]))) # XXX if we take into account error here we'll go below 0 for graphs that probably shouldn't
         return (x, y)            
 
     def get_maximum_point(self):
         if not self.data: return None
         x = max(t[X] for t in self.data)
-        y = max(t[Y] + (t[YERR] or 0) for t in self.data)
+        y = maximum((t[Y] + (t[YERR] or 0) for t in self.data if not math.isnan(t[Y])))
         return (x, y)
 
     def transformed_data(self, plot):
