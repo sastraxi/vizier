@@ -37,3 +37,18 @@ def frange(*args):
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
+
+
+def maximum(iterable, default=None):
+    '''Like max(), but returns a default value if the iterable is empty.'''
+    try:
+        return max(iterable)
+    except ValueError:
+        return default
+
+def minimum(iterable, default=None):
+    '''Like min(), but returns a default value if the iterable is empty.'''
+    try:
+        return min(iterable)
+    except ValueError:
+        return default
