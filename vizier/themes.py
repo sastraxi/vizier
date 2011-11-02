@@ -193,4 +193,16 @@ class WardTheme(SlickTheme):
         self.context.set_dash([5.0, 2.0])
         self.context.set_line_width(1.6)
         # TODO dash stuff here             
+
+    def prepare_title(self):
+        if not self.context: raise Exception("No context attached")
+        self.context.set_source_rgba(0, 0, 0, 1.0)
+        self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)        
+        self.context.set_font_size(14.0)
+
+    def prepare_subtitle(self):
+        if not self.context: raise Exception("No context attached")
+        self.context.set_source_rgba(0, 0, 0, 0.8)
+        self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        self.context.set_font_size(12.0)             
         
