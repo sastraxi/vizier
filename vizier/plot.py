@@ -46,8 +46,9 @@ class ContinuousPlot(Plot):
     """ Plots for which the X/Y axes form a continuous plane.
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
-    def __init__(self, title=None, subtitle=None, date=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
+    def __init__(self, title=None, subtitle=None, date=None, identifier=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
         Plot.__init__(self, title, subtitle, date, theme)
+        self.identifier = identifier # XXX ward-specific needs to go
         self.legend = legend
         self.axis = [x_axis, y_axis]
         self.bounds = bounds
@@ -158,6 +159,13 @@ class ContinuousPlot(Plot):
         start = [PADDING, PADDING]
         end = [self.width - PADDING, self.height - PADDING]
 
+        # draw the "identifier" XXX ward-specific needs to go
+        if self.identifier:
+            ctx.move_to(end[X], end[Y])
+            self.theme.prepare_label()
+            self.context.set_font_size(6.0)
+            drawtext(ctx, self.identifier, halign=RIGHT, valign=BOTTOM)
+
         # draw the title and subtitle.
         if self.title:
             ctx.move_to(start[X], start[Y] + 12)
@@ -201,6 +209,9 @@ class ContinuousPlot(Plot):
             self.theme.prepare_label()
             threshold.draw_legend_label(ctx)
             end[Y] -= 16
+        else:
+            if self.identifier and not (self.theme.axis_titles[X] and self.axis[X].title):
+                end[Y] -= 8
         if self._thresholds: end[Y] -= 4
 
         # prepare for our grids and labels.

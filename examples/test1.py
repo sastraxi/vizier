@@ -24,6 +24,7 @@ for x in range(24):
 
 complex_graph = ContinuousPlot(title="Continuous Effluent Flow",
                                subtitle="These words sound scientific",
+                               identifier="21/12/abc/123/def",
                                legend=True,
                                #x_axis=DatetimeAxis("Hour of Day", major=datetime.timedelta(minutes=180), minor=datetime.timedelta(minutes=60)),
                                x_axis=NumberAxis("Hour of Day", major=3.0, minor=1.0),
@@ -43,7 +44,7 @@ complex_graph.add(
 
 )
 
-complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", date="July 1, 2009", legend=False, theme=SlickTheme())
+complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", date="July 1, 2009", identifier="00/12/abc/123/def", legend=False, theme=SlickTheme())
 complex_graph2.axis[X] = NumberAxis(None, major=3.0)
 complex_graph2.axis[Y] = NumberAxis(None, major=10, minor=2.5)
 complex_graph2.theme.minor_axis_labels[Y] = True
@@ -52,7 +53,7 @@ complex_graph2.theme.minor_axis_style[Y] = MarkerType.INNER_TICKS
 complex_graph2.theme.minor_axis_style[X] = MarkerType.LINES
 complex_graph2.add(
 
-    LineSeries("Random(5, 55)", [(0.5 + (x / 2.0), 5 + 50 * random.random()) for x in range(20)], curviness=0),
+    LineSeries("Random(5, 55)", [(0.5 + (x / 2.0), 5 + 50 * random.random()) for x in range(20)], curviness=0, raw=True),
     LineSeries("Random(20, 40)", [(0.5 + (x / 3.0), (20 + 20 * random.random()) if random.random() < 0.8 else float('nan'), random.random() * 2) for x in range(30)], curviness=1, nan_holes=True)
 
 )

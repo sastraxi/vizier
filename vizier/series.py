@@ -117,7 +117,7 @@ class AreaSeries(Series):
 
 class LineSeries(Series):
 
-    def __init__(self, name, data, dots=True, curviness=0.0, nan_holes=True):
+    def __init__(self, name, data, dots=True, curviness=0.0, nan_holes=True, raw=False): # XXX ward-specific NEEDS TO GO ASAP
         Series.__init__(self, name)
         self.data = []
         for d in data:
@@ -134,6 +134,7 @@ class LineSeries(Series):
 
         self.curviness = curviness
         self.dots = dots
+        self.raw = raw # XXX ward-specific NEEDS TO GO ASAP
 
     # XXX kinda hacky
     def average_x_frequency(self, plot):
@@ -163,7 +164,8 @@ class LineSeries(Series):
     
     def draw_data(self, plot):
         ctx = plot.context
-        dot_radius = 3 #theme.get_dot_size(self) # TODO fix this
+        dot_radius = 3 if not self.raw else 0.5 # XXX ward-specific NEEDS TO GO ASAP #theme.get_dot_size(self) # TODO fix this
+        line_size = 2.0 if not self.raw else 0.3 # XXX ward-specific NEEDS TO GO ASAP
         # TODO use bounds to clip out data
 
         position = [(t[X], t[Y]) for t in self.transformed_data(plot)]
@@ -177,7 +179,7 @@ class LineSeries(Series):
         needpt = True
         for i in range(0, len(position)):
             if math.isnan(position[i][Y]):
-                stroke(ctx, 2.0)
+                stroke(ctx, line_size)
                 needpt = True
                 continue
             
@@ -200,7 +202,10 @@ class LineSeries(Series):
             x3, y3 = (px1, py1)
             ctx.curve_to(x1, y1, x2, y2, x3, y3)
 
-        stroke(ctx, 2.0)
+        stroke(ctx, line_size)
+
+        # XXX ward-specific NEEDS TO GO ASAP
+        if self.raw: ctx.set_source_rgba(0, 0, 0, 1)
 
         if self.dots:
             for p in position:
