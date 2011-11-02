@@ -75,14 +75,14 @@ class AreaSeries(Series):
     def get_minimum_point(self):
         if not self.data: return None
         x = min(t[X][0] for t in self.data)
-        y = min(t[Y] for t in self.data) # XXX if we take into account error here we'll go below 0 for graphs that probably should't
+        y = minimum((t[Y] for t in self.data if not math.isnan(t[Y]))) # XXX if we take into account error here we'll go below 0 for graphs that probably should't
         return (x, y)
 
     def get_maximum_point(self):
         if not self.data: return None
         x = max(t[X][1] for t in self.data)
         # XXX y_error only makes sense if plot.axis[Y] is a NumberAxis
-        y = max(t[Y] + (t[YERR] or 0) for t in self.data)
+        y = maximum((t[Y] + (t[YERR] or 0) for t in self.data if not math.isnan(t[Y])))
         return (x, y)
 
     def transformed_data(self, plot):
