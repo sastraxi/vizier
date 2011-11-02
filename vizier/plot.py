@@ -174,12 +174,12 @@ class ContinuousPlot(Plot):
             start[Y] += 12
 
         if self.subtitle:
-            ctx.move_to(start[X], start[Y] + 12)
+            ctx.move_to(start[X], start[Y] + 14)
             self.theme.prepare_subtitle()
             ctx.show_text(self.subtitle)
         
         if self.date:
-            ctx.move_to(end[X], start[Y] + 12)
+            ctx.move_to(end[X], start[Y] + 14)
             self.theme.prepare_subtitle()
             drawtext(ctx, self.date, halign=RIGHT, valign=BOTTOM)
 
