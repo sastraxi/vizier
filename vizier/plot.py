@@ -46,13 +46,16 @@ class ContinuousPlot(Plot):
     """ Plots for which the X/Y axes form a continuous plane.
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
-    def __init__(self, title=None, subtitle=None, date=None, identifier=None, legend=False, x_axis=None, y_axis=None, bounds=None, y_min=None, theme=SlickTheme()):
+    def __init__(self, title=None, subtitle=None, date=None, identifier=None, legend=False, x_axis=None, y_axis=None, bounds=None, x_min = None, x_max = None, y_min=None, y_max=None, theme=SlickTheme()):
         Plot.__init__(self, title, subtitle, date, theme)
         self.identifier = identifier # XXX ward-specific needs to go
         self.legend = legend
         self.axis = [x_axis, y_axis]
         self.bounds = bounds
+        self.x_min = x_min
+        self.x_max = x_max
         self.y_min = y_min
+        self.y_max = y_max
         self._autobounds = bounds is None
         self._series = []
         self._thresholds = []
@@ -101,9 +104,15 @@ class ContinuousPlot(Plot):
             if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
                 self.bounds[Y1] = 0
                 
-            # allow manual override of Y1:
+            # allow manual override of bounds:
+            if self.x_min is not None:
+                self.bounds[X1] = self.x_min
+            if self.x_max is not None:
+                self.bounds[X2] = self.x_max            
             if self.y_min is not None:
                 self.bounds[Y1] = self.y_min
+            if self.y_max is not None:
+                self.bounds[Y2] = self.y_max
 
             # XXX here be stupid, hacky dragons.
             # sane margins, github issue #3
