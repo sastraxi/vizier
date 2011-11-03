@@ -182,8 +182,7 @@ class WardTheme(SlickTheme):
         if axis == X:
             drawtext(self.context, marker.label, CENTER, TOP, vadjust=4.0)     
         else:
-            drawtext(self.context, marker.label, RIGHT, MIDDLE, hadjust=-4.0)              
-                
+            drawtext(self.context, marker.label, RIGHT, MIDDLE, hadjust=-4.0)                              
             
     def prepare_threshold(self, index, threshold):
         if not self.context: raise Exception("No context attached")
@@ -204,5 +203,18 @@ class WardTheme(SlickTheme):
         if not self.context: raise Exception("No context attached")
         self.context.set_source_rgba(0, 0, 0, 0.8)
         self.context.select_font_face(self.FONT_FAMILY, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        self.context.set_font_size(12.0)             
+        self.context.set_font_size(12.0)    
+        
+    def prepare_error(self, index, series):
+        if not self.context: raise Exception("No context attached")
+        self.context.set_source_rgba(0.0, 0.0, 0.0, 1.0)
+        self.context.set_line_width(1.0)          
+        
+    def prepare_series(self, index, series):        
+        if not self.context: raise Exception("No context attached")
+        colour = self.SERIES_COLOURS[index % len(self.SERIES_COLOURS)]
+        self.context.set_source_rgba(*colour)
+        self.context.set_line_width(1.6)
+        self.context.set_dash([])
+        
         
