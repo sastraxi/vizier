@@ -205,7 +205,7 @@ class LineSeries(Series):
         stroke(ctx, line_size)
 
         # XXX ward-specific NEEDS TO GO ASAP
-        if self.raw: ctx.set_source_rgba(0, 0, 0, 1)
+        if self.raw: ctx.set_source_rgba(1, 0, 0, 1)
 
         if self.dots:
             for p in position:
