@@ -226,7 +226,9 @@ class Threshold(Series):
 
     def __init__(self, id, type, name, value):
         #Series.__init__(self, str(value) + " - " + type + ": " + name) # wait until colour change and bolding for "Warning" etc.
-        Series.__init__(self, '{0} - {1} [{2}]'.format(str(value), name, id))
+        def ppf(x):
+            return ('%f' % x).rstrip('0').rstrip('.')
+        Series.__init__(self, '{0} - {1} [{2}]'.format(ppf(value), name, id))
         self.type = type
         self.value = value
     
