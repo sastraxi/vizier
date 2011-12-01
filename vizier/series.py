@@ -138,6 +138,10 @@ class LineSeries(Series):
 
     # XXX kinda hacky
     def average_x_frequency(self, plot):
+
+        # XXX if we don't have enough data, just use "1.0"
+        if len(self.data) <= 1: return 1.0
+
         spacings = 0
         nspacings = len(self.data) - 1
         for i in range(nspacings):
