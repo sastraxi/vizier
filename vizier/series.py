@@ -5,22 +5,31 @@ import math
 
 HALF_ERROR_BAR_WIDTH = 3.0
 
-def draw_error_bar(ctx, x, y, error):
-    error_top = y + error
-    error_bottom = y - error
+def draw_error_bar(ctx, x, y, err_up, err_down):
+    error_top = y + err_up if err_up else y
+    error_bottom = y - err_down if err_down else y
 
     half_width, _zero = scaledsize(ctx, HALF_ERROR_BAR_WIDTH, 0)
 
-    ctx.move_to(x - half_width, error_top)
-    ctx.line_to(x + half_width, error_top)
-    stroke(ctx, 1.0)
+    if err_up:
+        ctx.move_to(x - half_width, error_top)
+        ctx.line_to(x + half_width, error_top)
+        stroke(ctx, 1.0)
 
-    ctx.move_to(x - half_width, error_bottom)
-    ctx.line_to(x + half_width, error_bottom)
-    stroke(ctx, 1.0)
+    if err_down:
+        ctx.move_to(x - half_width, error_bottom)
+        ctx.line_to(x + half_width, error_bottom)
+        stroke(ctx, 1.0)
 
-    ctx.move_to(x, error_top)
-    ctx.line_to(x, error_bottom)
+    if err_up:
+        ctx.move_to(x, error_top)
+    else:
+        ctx.move_to(x, y)
+        
+    if err_down:
+        ctx.line_to(x, error_bottom)
+    else:
+        ctx.move_to(x, y)
     stroke(ctx, 1.0)
 
 
@@ -82,7 +91,7 @@ class AreaSeries(Series):
         if not self.data: return None
         x = max(t[X][1] for t in self.data)
         # XXX y_error only makes sense if plot.axis[Y] is a NumberAxis
-        y = maximum((t[Y] + (t[YERR] or 0) for t in self.data if not math.isnan(t[Y])))
+        y = maximum((t[Y] + (t[YERR][0] or 0) for t in self.data if not math.isnan(t[Y])))
         return (x, y)
 
     def transformed_data(self, plot):
@@ -112,7 +121,7 @@ class AreaSeries(Series):
     def draw_errors(self, plot):
         for x1, x2, y, y_error in self.transformed_data(plot):
             if y_error:
-                draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error)
+                draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error[0], y_error[1])
 
 
 class LineSeries(Series):
@@ -158,7 +167,7 @@ class LineSeries(Series):
     def get_maximum_point(self):
         if not self.data: return None
         x = max(t[X] for t in self.data)
-        y = maximum((t[Y] + (t[YERR] or 0) for t in self.data if not math.isnan(t[Y])))
+        y = maximum((t[Y] + (t[YERR][0] or 0) for t in self.data if not math.isnan(t[Y])))
         return (x, y)
 
     def transformed_data(self, plot):
@@ -218,8 +227,8 @@ class LineSeries(Series):
         
     def draw_errors(self, plot):
         for x, y, y_error in self.transformed_data(plot):
-            if y_error:
-                draw_error_bar(plot.context, x, y, y_error)
+            #if y_error:
+            draw_error_bar(plot.context, x, y, y_error[0], y_error[1])
 
 
 class Threshold(Series):
