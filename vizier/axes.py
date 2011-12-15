@@ -19,11 +19,9 @@ DT_INTERVALS = [(datetime.timedelta(days=365), '%d %b %Y'),
 
 # supports intervals less than 10^9 (one billion)
 def n_intervals():
-    n = 9
-    while True:
+    for n in range(9,-10,-1):
         yield 10 ** n
         yield 0.5 * (10 ** n)
-        n -= 1
 
 def labelstr(x):
     s = str(x)
@@ -131,6 +129,7 @@ class AutoNumberAxis(NumberAxis):
         for interval in n_intervals():  # go through acceptable intervals from largest to smallest
             if size / interval >= 4:  # once we find one that fits in the data range at least twice
                 return interval, (interval / 5.0)  # we take that one as the major interval, and divide by 5 to get the minor                   
+        return (10e-9, 5e-9) # default interval to fix a bug
 
     def markers(self, lower, upper):
         
