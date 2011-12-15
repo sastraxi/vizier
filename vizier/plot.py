@@ -103,6 +103,12 @@ class ContinuousPlot(Plot):
             # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
             if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
                 self.bounds[Y1] = 0
+            
+            # prevent manual overrides from making lower above upper, etc. "Don't cross the streams."
+            if self.x_min >= self.x_max:
+                self.x_min = None
+            if self.y_min >= self.y_max:
+                self.y_min = None
                 
             # allow manual override of bounds:
             if self.x_min is not None:
