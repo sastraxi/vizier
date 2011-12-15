@@ -129,7 +129,7 @@ class AutoNumberAxis(NumberAxis):
     
     def find_intervals(self, size):
         for interval in n_intervals():  # go through acceptable intervals from largest to smallest
-            if size // interval >= 4:  # once we find one that fits in the data range at least twice
+            if size / interval >= 4:  # once we find one that fits in the data range at least twice
                 return interval, (interval / 5.0)  # we take that one as the major interval, and divide by 5 to get the minor                   
 
     def markers(self, lower, upper):
