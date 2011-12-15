@@ -109,6 +109,14 @@ class ContinuousPlot(Plot):
                 self.x_min = None
             if self.y_min >= self.y_max:
                 self.y_min = None
+            if self.x_min >= self.bounds[X2]:
+                self.x_min = None
+            if self.x_max <= self.bounds[X1]:
+                self.x_max = None
+            if self.y_min >= self.bounds[Y2]:
+                self.y_min = None
+            if self.y_max <= self.bounds[Y1]:
+                self.y_max = None
                 
             # allow manual override of bounds:
             if self.x_min is not None:
