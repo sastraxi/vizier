@@ -105,9 +105,9 @@ class ContinuousPlot(Plot):
                 self.bounds[Y1] = 0
             
             # prevent manual overrides from making lower above upper, etc. "Don't cross the streams."
-            if self.x_min >= self.x_max:
+            if self.x_min >= self.x_max and self.x_max is not None:
                 self.x_min = None
-            if self.y_min >= self.y_max:
+            if self.y_min >= self.y_max and self.y_max is not None:
                 self.y_min = None
             if self.x_min >= self.bounds[X2]:
                 self.x_min = None
