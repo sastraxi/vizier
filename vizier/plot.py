@@ -46,17 +46,15 @@ class ContinuousPlot(Plot):
     """ Plots for which the X/Y axes form a continuous plane.
         Takes AreaSeries, LineSeries, and Threshold series objects. """
 
-    def __init__(self, title=None, subtitle=None, date=None, identifier=None, legend=False, x_axis=None, y_axis=None, bounds=None, x_min = None, x_max = None, y_min=None, y_max=None, theme=SlickTheme()):
+    def __init__(self, title=None, subtitle=None, date=None, identifier=None, legend=False, x_axis=None, y_axis=None, x_min = None, x_max = None, y_min=None, y_max=None, theme=SlickTheme()):
         Plot.__init__(self, title, subtitle, date, theme)
         self.identifier = identifier # XXX ward-specific needs to go
         self.legend = legend
         self.axis = [x_axis, y_axis]
-        self.bounds = bounds
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
-        self._autobounds = bounds is None
         self._series = []
         self._thresholds = []
 
@@ -74,10 +72,10 @@ class ContinuousPlot(Plot):
         for el in self._series + self._thresholds:           
             minpt, maxpt = el.get_minimum_point(), el.get_maximum_point()
             
-            if minpt[X] is not None: minx = minpt[X] if minx is None else min(minx, minpt[X])
-            if minpt[Y] is not None: miny = minpt[Y] if miny is None else min(miny, minpt[Y])
-            if maxpt[X] is not None: maxx = maxpt[X] if maxx is None else max(maxx, maxpt[X])
-            if maxpt[Y] is not None: maxy = maxpt[Y] if maxy is None else max(maxy, maxpt[Y])                                    
+            if minpt and minpt[X] is not None: minx = minpt[X] if minx is None else min(minx, minpt[X])
+            if minpt and minpt[Y] is not None: miny = minpt[Y] if miny is None else min(miny, minpt[Y])
+            if maxpt and maxpt[X] is not None: maxx = maxpt[X] if maxx is None else max(maxx, maxpt[X])
+            if maxpt and maxpt[Y] is not None: maxy = maxpt[Y] if maxy is None else max(maxy, maxpt[Y])                                    
 
         # XXX is this the right way to do this? FIXME HACK TODO ETC.
         if minx is None: minx = 0 if maxx is None else maxx
@@ -88,61 +86,47 @@ class ContinuousPlot(Plot):
         self.minimum_point = (minx, miny)
         self.maximum_point = (maxx, maxy)
 
-        if self._autobounds:
-            self.bounds = [self.axis[X].as_number(self.minimum_point[X]),
-                           self.axis[Y].as_number(self.minimum_point[Y]),
-                           self.axis[X].as_number(self.maximum_point[X]),
-                           self.axis[Y].as_number(self.maximum_point[Y])]
-            
-            # if there is no spread on the Y-axis, put the points in the middle of the graph.
-            # also captures the case where there are no points at all.
-            if abs(self.bounds[Y2] - self.bounds[Y1]) < EPSILON:
-                self.bounds[Y1] = self.bounds[Y1] - 0.5
-                self.bounds[Y2] = self.bounds[Y2] + 0.5
-            
-            # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
-            if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
-                self.bounds[Y1] = 0
-            
-            # prevent manual overrides from making lower above upper, etc. "Don't cross the streams."
-            if self.x_min >= self.x_max and self.x_max is not None:
-                self.x_min = None
-            if self.y_min >= self.y_max and self.y_max is not None:
-                self.y_min = None
-            if self.x_min >= self.bounds[X2]:
-                self.x_min = None
-            if self.x_max <= self.bounds[X1]:
-                self.x_max = None
-            if self.y_min >= self.bounds[Y2]:
-                self.y_min = None
-            if self.y_max <= self.bounds[Y1]:
-                self.y_max = None
-                
-            # allow manual override of bounds:
-            if self.x_min is not None:
-                self.bounds[X1] = self.x_min
-            if self.x_max is not None:
-                self.bounds[X2] = self.x_max            
-            if self.y_min is not None:
-                self.bounds[Y1] = self.y_min
-            if self.y_max is not None:
-                self.bounds[Y2] = self.y_max
+        self.bounds = [self.x_min if self.x_min is not None else self.axis[X].as_number(self.minimum_point[X]),
+                       self.y_min if self.y_min is not None else self.axis[Y].as_number(self.minimum_point[Y]),
+                       self.x_max if self.x_max is not None else self.axis[X].as_number(self.maximum_point[X]),
+                       self.y_max if self.y_max is not None else self.axis[Y].as_number(self.maximum_point[Y])]
+        
+        # if there is no spread on the Y-axis, put the points in the middle of the graph.
+        # also captures the case where there are no points at all.
+        if abs(self.bounds[Y2] - self.bounds[Y1]) < EPSILON:
+            self.bounds[Y1] = self.bounds[Y1] - 0.5
+            self.bounds[Y2] = self.bounds[Y2] + 0.5
+        
+        # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
+        if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
+            self.bounds[Y1] = 0
+        
+        # prevent manual overrides from making lower above upper, etc. "Don't cross the streams."
+        # XXX do we need this?
+        if self.bounds[X1] >= self.bounds[X2]:
+            tmp = self.bounds[X1]
+            self.bounds[X1] = self.bounds[X2]
+            self.bounds[X2] = tmp            
+        if self.bounds[Y1] >= self.bounds[Y2]:
+            tmp = self.bounds[Y1]
+            self.bounds[Y1] = self.bounds[Y2]
+            self.bounds[Y2] = tmp
 
-            # XXX here be stupid, hacky dragons.
-            # sane margins, github issue #3
-            y_padding = (self.bounds[Y2] - self.bounds[Y1]) * 0.07
-            self.bounds[Y2] += y_padding
-            if abs(self.bounds[Y1]) >= EPSILON:
-                self.bounds[Y1] -= y_padding
-            # XXX why is zero special?
+        # XXX here be stupid, hacky dragons.
+        # sane margins, github issue #3
+        y_padding = (self.bounds[Y2] - self.bounds[Y1]) * 0.07
+        self.bounds[Y2] += y_padding
+        if abs(self.bounds[Y1]) >= EPSILON:
+            self.bounds[Y1] -= y_padding
+        # XXX why is zero special?
 
-            # give extra X padding to line-only graphs, github issue #3
-            all_lines = all(isinstance(s, LineSeries) for s in self._series)
-            if all_lines:
-                avg_spacing = sum(s.average_x_frequency(self) for s in self._series) / float(len(self._series))
-                self.bounds[X1] -= 0.5 * avg_spacing 
-                self.bounds[X2] += 0.5 * avg_spacing
-    
+        # give extra X padding to line-only graphs, github issue #3
+        all_lines = all(isinstance(s, LineSeries) for s in self._series)
+        if all_lines:
+            avg_spacing = sum(s.average_x_frequency(self) for s in self._series) / float(len(self._series))
+            self.bounds[X1] -= 0.5 * avg_spacing 
+            self.bounds[X2] += 0.5 * avg_spacing
+
     @contextlib.contextmanager
     def dataspace(self, start, end):
 
