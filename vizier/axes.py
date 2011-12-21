@@ -2,6 +2,7 @@ from helpers import *
 from cairohelpers import *
 import math
 import datetime
+import re
 
 STANDARD_EPOCH = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
@@ -23,9 +24,17 @@ def n_intervals():
         yield 10 ** n
         yield 0.5 * (10 ** n)
 
-def labelstr(x):
-    s = str(x)
-    return s[:-2] if s.endswith('.0') else s
+def labelstr(s):
+    formatted = '%.10f' % (s)
+    stripped = re.split('0+$', formatted)
+    if stripped[0][-1] == '.':
+        return stripped[0][:-1]
+    else:
+        return stripped[0]
+
+#def labelstr(x):
+    #s = '%f' % (x)
+    #return s
 
 def dtstr(x, fmt, epoch=STANDARD_EPOCH):
     dt = epoch + datetime.timedelta(seconds=x)
