@@ -89,13 +89,16 @@ class ContinuousPlot(Plot):
         self.bounds = [self.x_min if self.x_min is not None else self.axis[X].as_number(self.minimum_point[X]),
                        self.y_min if self.y_min is not None else self.axis[Y].as_number(self.minimum_point[Y]),
                        self.x_max if self.x_max is not None else self.axis[X].as_number(self.maximum_point[X]),
-                       self.y_max if self.y_max is not None else self.axis[Y].as_number(self.maximum_point[Y])]
+                       self.y_max if self.y_max is not None else self.axis[Y].as_number(self.maximum_point[Y])]    
         
         # if there is no spread on the Y-axis, put the points in the middle of the graph.
         # also captures the case where there are no points at all.
         if abs(self.bounds[Y2] - self.bounds[Y1]) < EPSILON:
-            self.bounds[Y1] = self.bounds[Y1] - 0.5
-            self.bounds[Y2] = self.bounds[Y2] + 0.5
+            if self.bounds[Y1] == 0:
+                self.bounds[Y2] = self.bounds[Y1] + 1
+            else:
+                self.bounds[Y1] = self.bounds[Y1] - 0.5
+                self.bounds[Y2] = self.bounds[Y2] + 0.5
         
         # if graph would almost hit y=0 (relative to its y-scale), make it hit y=0.
         if self.bounds[Y1] > 0 and self.bounds[Y1] / self.bounds[Y2] < 0.3:
