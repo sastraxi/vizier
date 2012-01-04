@@ -287,17 +287,25 @@ class ContinuousPlot(Plot):
                     #if abs(y - self.bounds[Y1]) > EPSILON or not self.theme.major_axis_labels[X]:
                     if not any(abs(y - v) < EPSILON for v in seen):
                         self.theme.draw_marker_label(Y, marker, self.bounds[X1], y)
-                    seen.append(y)                    
-            
+                    seen.append(y)                            
+
+            for i, series in enumerate(self._series):
+                if series.draw_before_thresholds:
+                    self.theme.prepare_series(i, series)
+                    series.draw_data(self)
+                    self.theme.prepare_error(i, series)
+                    series.draw_errors(self)
+
             for i, threshold in enumerate(self._thresholds):
                 self.theme.prepare_threshold(i, threshold)
                 threshold.draw(self)
 
             for i, series in enumerate(self._series):
-                self.theme.prepare_series(i, series)
-                series.draw_data(self)
-                self.theme.prepare_error(i, series)
-                series.draw_errors(self)
+                if not series.draw_before_thresholds:
+                    self.theme.prepare_series(i, series)
+                    series.draw_data(self)
+                    self.theme.prepare_error(i, series)
+                    series.draw_errors(self)
             
         # draw the X axis line.
         self.theme.prepare_axis_line()

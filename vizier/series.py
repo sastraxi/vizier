@@ -35,8 +35,9 @@ def draw_error_bar(ctx, x, y, err_up, err_down):
 
 class Series(object):
 
-    def __init__(self, name):
+    def __init__(self, name, draw_before_thresholds=False):
         self.name = name
+        self.draw_before_thresholds = draw_before_thresholds
 
     def average_x_frequency(self):
         pass
@@ -62,7 +63,7 @@ class AreaSeries(Series):
     HALF_SPACING = 1.0
 
     def __init__(self, name, data):
-        Series.__init__(self, name)
+        Series.__init__(self, name, True)
         self.data = []
         for d in data:
             try:
@@ -127,7 +128,7 @@ class AreaSeries(Series):
 class LineSeries(Series):
 
     def __init__(self, name, data, dots=True, curviness=0.0, nan_holes=True, raw=False): # XXX ward-specific NEEDS TO GO ASAP
-        Series.__init__(self, name)
+        Series.__init__(self, name, False)
         self.data = []
         for d in data:
             try:
