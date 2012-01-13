@@ -173,7 +173,8 @@ class ContinuousPlot(Plot):
             ctx.move_to(end[X], end[Y])
             self.theme.prepare_label()
             self.context.set_font_size(6.0)
-            drawtext(ctx, self.identifier, halign=RIGHT, valign=BOTTOM)
+            with unclipped(ctx):
+                drawtext(ctx, self.identifier, halign=RIGHT, valign=BOTTOM)
 
         # draw the title and subtitle.
         if self.title:
