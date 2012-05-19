@@ -122,7 +122,12 @@ class AreaSeries(Series):
     def draw_errors(self, plot):
         for x1, x2, y, y_error in self.transformed_data(plot):
             if y_error:
-                draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error[0], y_error[1])
+                try:
+                    # y_error is a 2-tuple (up error, down error)
+                    draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error[0], y_error[1])
+                except TypeError:
+                    # y_error is scalar
+                    draw_error_bar(plot.context, 0.5 * (x1 + x2), y, y_error, y_error)
 
 
 class LineSeries(Series):
@@ -228,8 +233,12 @@ class LineSeries(Series):
         
     def draw_errors(self, plot):
         for x, y, y_error in self.transformed_data(plot):
-            #if y_error:
-            draw_error_bar(plot.context, x, y, y_error[0], y_error[1])
+            try:
+                # y_error is a 2-tuple (up error, down error)
+                draw_error_bar(plot.context, x, y, y_error[0], y_error[1])
+            except TypeError:
+                # y_error is scalar
+                draw_error_bar(plot.context, x, y, y_error, y_error)
 
 
 class Threshold(Series):

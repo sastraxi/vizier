@@ -43,12 +43,12 @@ def maximum(iterable, default=None):
     '''Like max(), but returns a default value if the iterable is empty.'''
     try:
         return max(iterable)
-    except ValueError:
+    except:
         return default
 
 def minimum(iterable, default=None):
     '''Like min(), but returns a default value if the iterable is empty.'''
     try:
         return min(iterable)
-    except ValueError:
+    except:
         return default

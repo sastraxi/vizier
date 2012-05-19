@@ -44,7 +44,14 @@ complex_graph.add(
 
 )
 
-complex_graph2 = ContinuousPlot(title="Only Lines Here", subtitle="This is a test of x spacing and NaN handling.", date="July 1, 2009", identifier="00/12/abc/123/def", legend=False, theme=SlickTheme())
+complex_graph2 = ContinuousPlot(title="Only Lines Here",
+                                subtitle="This is a test of x spacing and NaN handling.",
+                                date="July 1, 2009",
+                                identifier="00/12/abc/123/def",
+                                legend=False,
+                                y_min=0.0,
+                                y_max=60.0,
+                                theme=SlickTheme())
 complex_graph2.axis[X] = NumberAxis(None, major=3.0)
 complex_graph2.axis[Y] = NumberAxis(None, major=10, minor=2.5)
 complex_graph2.theme.minor_axis_labels[Y] = True
@@ -63,4 +70,4 @@ page = GridPage(width=8.5*Inch, height=11*Inch, rows=2, columns=1, margin=0.5*In
 page[0, 0] = complex_graph
 page[0, 1] = complex_graph2
 book.append(page)
-book.compile("abc.pdf")
+book.compile("test1.pdf")
