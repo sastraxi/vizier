@@ -38,7 +38,7 @@ You should now be able to run one of the examples. Try::
 
     python examples/test1.py
 
-If abc.pdf is created and looks relatively sane, you're ready to go.
+If test1.pdf is created and looks slick, you're ready to go!
 
 Quick Example
 =============
